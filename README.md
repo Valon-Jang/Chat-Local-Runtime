@@ -14,82 +14,62 @@ Five AI-first local tools have now been built and validated:
 
 | Tool | Build | Purpose | Self-test |
 |---|---|---|---:|
-| Local Worker Hub | `0.1.1-public` | common deterministic offload / plugin execution | 7/7 PASS |
-| Verification Runner | `0.1.1-public` | fingerprinting, static checks and controlled behavioral verification | 5/5 PASS |
-| Workspace Inspector | `0.1.2-public` in `dist/` | metadata-first workspace preprocessing and targeted-content planning | 14/14 PASS |
-| Smart Diff / State Tracker | `0.1.0-public` | semantic code/config/document change tracking | 15/15 PASS |
-| Artifact Builder / Release Manager | `0.1.1` | deterministic `.pyz`/ZIP build, SHA/manifest, verification gating and release packaging | 16/16 PASS |
+| Local Worker Hub | `0.1.1` | deterministic execution foundation / plugin routing | PASS |
+| Verification Runner | `0.2.0` | contract- and validator-backed fact confirmation | 8/8 PASS |
+| Workspace Inspector | `0.1.3` | metadata-first preprocessing and canonical targeted reading | 15/15 PASS |
+| Smart Diff / State Tracker | `0.1.1` | structural / artifact / non-git semantic comparison | 17/17 PASS |
+| Artifact Builder / Release Manager | `0.1.1` | deterministic build, SHA/manifest, verification gating and packaging | 16/16 PASS |
 
-The original four executable public fallback builds remain under [`dist/`](dist/). Artifact Builder v0.1.1 is the exact verified generated artifact. Because the available GitHub writer is text/bounded-blob oriented, that executable is stored as five binary parts under `dist/artifactbuilder.pyz.part01` ... `part05`; installer v0.3 concatenates them byte-for-byte and checks the final SHA-256.
+The exact current four-tool core is mirrored under [`dist/active/`](dist/active/). Artifact Builder v0.1.1 remains reconstructed from its verified binary parts already checked into `dist/`.
 
-Artifact Builder v0.1.1 SHA-256:
+The older `dist/*.pyz` builds and installer V03 are intentionally retained as historical public fallback artifacts instead of being silently overwritten.
+
+## Design principle
+
+> **Programs confirm and compress deterministic facts so the AI can decide the next action.**
+
+Small local utilities are not treated as substitute reasoning engines. They should reduce repeated execution/context work and return compact, auditable evidence.
+
+## What changed in the active core
+
+### Verification Runner v0.2.0 — fact confirmation first
+
+- explicit executable functionality contracts: args, stdin, return code, stdout/stderr conditions and expected JSON keys
+- **no functional contract => `INCONCLUSIVE`**, not fabricated functionality PASS
+- runtime discovery and structured facts for installed `ruff`, `bandit`, `mypy`, `pytest`, and `coverage`
+- missing validators stay explicitly unavailable; the runner does not auto-install them
+- repeated verification can report newly failing, resolved, and changed facts relative to a prior result
+- static pattern indicators remain advisory evidence rather than substitutes for real validator output
+
+In one tested ChatGPT code runtime on 2026-08-30, `pytest` and `coverage` were available while `ruff`, `bandit`, and `mypy` were not. This is an empirical runtime observation, not a product-wide guarantee.
+
+### Workspace Inspector v0.1.3 — canonical paths for every input count
+
+All relative content references now use:
 
 ```text
-1677f84252d0e275f0448426ac6702318ad30589c462493aea533e1ddfe63c3a
+inputN/...
 ```
 
-> **Identity boundary:** the older four GitHub executables are public reference/fallback rebuilds and are not claimed to be byte-identical to newer ChatGPT Library artifacts. Artifact Builder v0.1.1 is an exact mirror of the verified generated artifact.
+This applies even when there is only one input root. A path returned by `inspect` can therefore be passed unchanged to `targeted-content`. The self-test permanently reproduces the previously missed single-input round-trip failure.
 
-## Mandatory new / updated program validation lifecycle
+### Smart Diff v0.1.1 — focus where plain git diff is weak
 
-A new offload program is **not complete merely because it builds or passes its own self-test**. Unless a step is technically inapplicable, use this order:
+- JSON structural key/value changes
+- TOML structural changes
+- heuristic YAML structural changes
+- ZIP / PYZ internal member changes
+- XLSX internal package/member changes
+- non-git file-tree comparisons
+- auditable `importance_basis` with signals and point contributions instead of an unexplained score
 
-```text
-new / modified candidate
-        |
-        v
-1. Local Worker Hub first
-   - run Hub health/self-test
-   - invoke the candidate through the real Hub plugin contract when meaningful
-   - validate stdin/JSON/exit-code/result behavior
-        |
-        v
-2. Workspace Inspector
-   - inspect source/workspace metadata first
-   - identify key files, structure, anomalies, integration points and targeted reads
-        |
-        v
-3. Smart Diff / State Tracker
-   - compare against a trustworthy previous version/baseline when available
-   - separate intentional changes from accidental collateral changes
-        |
-        v
-4. Verification Runner
-   - verify source and final executable artifact where applicable
-   - functionality / safety / performance / compatibility gates
-        |
-        v
-5. Artifact Builder / Release Manager
-   - deterministic .pyz or ZIP
-   - SHA-256 + manifest
-   - normalize verifier evidence
-   - BLOCK / RELEASE_WITH_WARNINGS / RELEASE
-        |
-        v
-6. Defect loop
-   - if a meaningful problem is found, fix it
-   - add a permanent regression test when reproducible
-   - rerun the affected sequence; do not promote the known-bad build
-        |
-        v
-7. Reciprocal dogfood
-   - run the new program against each pre-existing program where its role applies
-   - rebuild / inspect / analyze / verify as appropriate
-   - rerun every affected original program's own self-test
-        |
-        v
-COMPLETE
-```
+### Local Worker Hub v0.1.1 — deliberately unchanged
 
-### Exceptions
+The Hub remains the common execution foundation. A detached async API such as `submit -> status -> result` remains a plausible future experiment, but it is **not promoted yet**. Its value depends heavily on workload frequency and runtime CPU entitlement, so it needs A/B evidence before increasing system complexity.
 
-Skip a step only when it is technically inapplicable or adds no meaningful evidence—for example Smart Diff without a trustworthy baseline, executable packaging checks for a documentation-only change, or a tool whose role cannot operate on the target. A skip is recorded explicitly; it is not a silent shortcut.
+Detailed redesign record: [`research/FACT_CONFIRMATION_REDESIGN_2026-08-30.md`](research/FACT_CONFIRMATION_REDESIGN_2026-08-30.md)
 
-This lifecycle was adopted after it caught a real Artifact Builder v0.1.0 integration defect: Local Worker Hub calls plugins as `request -` with JSON on stdin, while v0.1.0 rejected the positional `-`. v0.1.1 fixed the contract and added a permanent Hub stdin regression test.
-
-Detailed evidence: [`research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json`](research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json)
-
-## Storage model: Library-first, GitHub fallback/reference
+## Storage model: Library-first, GitHub reference/fallback
 
 ### ChatGPT Library
 
@@ -104,8 +84,8 @@ Preferred for exact active artifacts when available:
 Used for:
 
 - public documentation and version history
-- reference/fallback executables
-- exact mirrored artifact parts when available
+- exact mirrored active artifacts when available
+- historical fallback builds
 - SHA-256 records
 - installer/reconstruction logic
 - benchmark and research evidence
@@ -120,12 +100,12 @@ GitHub Chat-Local-Runtime
   -> public reference / fallback / reconstruction / research history
 ```
 
-## Install in a ChatGPT code runtime
+## Current installer — v0.4.0-public
 
-The five-tool installer is:
+Use:
 
 ```bash
-python installers/INSTALL_CHATGPT_FROM_REPO_V03.py install
+python installers/INSTALL_CHATGPT_FROM_REPO_V04.py install
 ```
 
 Default root:
@@ -137,67 +117,79 @@ Default root:
 Verify an existing installation:
 
 ```bash
-python installers/INSTALL_CHATGPT_FROM_REPO_V03.py verify
+python installers/INSTALL_CHATGPT_FROM_REPO_V04.py verify
 ```
 
 Verify repository artifacts before installation:
 
 ```bash
-python installers/INSTALL_CHATGPT_FROM_REPO_V03.py source-verify
+python installers/INSTALL_CHATGPT_FROM_REPO_V04.py source-verify
 ```
 
-Installer v0.3 is offline, reconstructs `artifactbuilder.pyz` by concatenating the five checked-in parts, verifies its SHA-256, installs all five programs, and executes each tool's own self-test. It does not assume every program exposes an identical CLI contract; Artifact Builder, for example, has `self-test` but no `capabilities` verb.
+Run installer regression tests:
 
-Installed layout:
+```bash
+python installers/INSTALL_CHATGPT_FROM_REPO_V04.py self-test
+```
+
+Installer v0.4 properties:
+
+- current four core artifacts are read from versioned `dist/active/` paths
+- strict `offload-ai/1` contract enforcement for the four current core tools
+- Artifact Builder v0.1.1 is explicitly marked as predating that shared contract; its hash/version/self-test are enforced without inventing a declaration
+- source SHA gate and staging SHA gate
+- backup-time manifest records the actual previous installation hashes
+- failed install restores and verifies against that backup manifest, **not** the new installer's expected hashes
+- first-install failure with no previous files reports a distinct `NO_PREVIOUS_INSTALL_REMOVED` state
+- latest 3 backups retained by default
+- stable machine-readable `next_action`
+
+Installer self-test: **8/8 PASS**.
+
+Legacy V03 remains available for historical fallback reproduction:
+
+```bash
+python installers/INSTALL_CHATGPT_FROM_REPO_V03.py install
+```
+
+## Mandatory new / updated program validation lifecycle
+
+A program is not complete merely because it builds or passes its own self-test.
 
 ```text
-ai_program_lab/
-├── programs/
-│   ├── workerhub.pyz
-│   ├── verificationrunner.pyz
-│   ├── workspaceinspector.pyz
-│   ├── smartdiff.pyz
-│   └── artifactbuilder.pyz
-├── code/
-├── tests/
-├── fixtures/
-├── benchmarks/
-├── artifacts/
-├── cache/
-├── runtime/
-├── logs/
-└── scratch/
+candidate
+  -> Local Worker Hub integration where meaningful
+  -> Workspace Inspector
+  -> Smart Diff when a trustworthy comparison exists
+  -> Verification Runner with explicit contract / real validator facts
+  -> Artifact Builder / Release Manager
+  -> reproduce any discovered defect in a permanent regression test
+  -> reciprocal dogfood against affected existing tools
+  -> COMPLETE
 ```
+
+A technically inapplicable step can be skipped, but the skip is explicit rather than silently converted into PASS.
 
 ## Artifact Builder / Release Manager v0.1.1
 
-Pipeline:
+Artifact Builder automates:
 
 ```text
 source folder
-  -> inspect
-  -> choose pure .pyz or ZIP
-  -> deterministic package
+  -> deterministic .pyz or ZIP
   -> SHA-256 + file manifest
-  -> static checks
-  -> Verification Runner adapter
+  -> verification evidence
   -> BLOCK / RELEASE_WITH_WARNINGS / RELEASE
-  -> final release ZIP
+  -> final release package
 ```
 
-Properties:
+Artifact Builder v0.1.1 SHA-256:
 
-- Python projects and general folders
-- runnable Python selects pure `.pyz`; general folders select ZIP
-- source is read-only
-- no network
-- symlinks are not followed
-- secret-looking files are excluded by default
-- nested output directories are excluded to prevent recursive self-copy
-- accepts existing verifier JSON or an external verifier command adapter
-- Hub-compatible `request -` stdin JSON contract
-- self-host build reproduced the exact v0.1.1 artifact SHA
-- reciprocal dogfood rebuilt the four pre-existing public fallback tools and preserved self-tests: 7/7, 5/5, 14/14, 15/15 PASS
+```text
+1677f84252d0e275f0448426ac6702318ad30589c462493aea533e1ddfe63c3a
+```
+
+It is stored as binary parts `dist/artifactbuilder.pyz.part01` ... `part05`; the installer reconstructs the exact bytes and checks the final SHA-256.
 
 ## Core architecture
 
@@ -205,17 +197,15 @@ Properties:
 Chat AI
   -> local runtime / workspace
       -> Local Worker Hub
-          -> Workspace Inspector
-          -> Smart Diff / State Tracker
-          -> Verification Runner
-          -> Artifact Builder / Release Manager
-          -> future verified tools
-      -> tests / fixtures / benchmarks
-      -> cache / indexes / artifacts
-  -> compact verified result back to the model
+          -> Workspace Inspector       # what is here?
+          -> Smart Diff / State Tracker# what actually changed?
+          -> Verification Runner       # what facts are confirmed?
+          -> Artifact Builder          # what exact artifact is releasable?
+      -> compact structured evidence
+  -> AI judgment / next action
 ```
 
-The key distinction is **file-based capability vs. LLM-context capability**: a reusable capability can exist as an executable, script, fixture, index, cache, benchmark, or package instead of being regenerated every task.
+The key distinction is **file-based capability vs. LLM-context capability**. Deterministic work belongs in reusable files/tools when that reduces repeated context and execution effort; reasoning and final judgment stay with the AI.
 
 ## Preliminary runtime observations
 
@@ -244,12 +234,11 @@ Practical rule used in this research: keep a single downloadable package at **40
 
 ## Next tool roadmap
 
-Artifact Builder is complete at v0.1.1. Next priorities:
-
 1. **Sandbox Launcher** — strong OS sandbox backend for behavior-testing native/opaque external executables.
 2. **Local Index / Search Engine** — incremental code/document/config index and relationship lookup.
 3. **Log / Trace Analyzer** — deterministic failure clustering and compact evidence extraction.
 4. **Dependency / Impact Mapper** — dependency/config/reference graph and impacted-file/test candidates.
+5. **Worker Hub async job experiment** — only if A/B testing shows `submit/status/result` materially reduces blocking work in the target runtime.
 
 ## Safety boundary
 
@@ -261,3 +250,4 @@ This research uses capabilities exposed by the host runtime. It does not depend 
 - [`research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md`](research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md)
 - [`research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json`](research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json)
 - [`research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json`](research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json)
+- [`research/FACT_CONFIRMATION_REDESIGN_2026-08-30.md`](research/FACT_CONFIRMATION_REDESIGN_2026-08-30.md)
