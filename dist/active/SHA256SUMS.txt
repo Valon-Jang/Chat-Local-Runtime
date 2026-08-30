@@ -1,0 +1,4 @@
+2ef1ad5a0e8270ca6e1cc8794058ae04d2f626de7b982331e0bf5596833905b5  workerhub-0.1.1.pyz
+641da71d80593422ec0d93a8d98930ccc62af8602f2aff05f8dd037feb3bccc3  verificationrunner-0.2.0.pyz
+2317ac17d3fb6cfa6e8983ee1dcb91523e7a86b2639f7ce8c4f58f3bbb49a26d  workspaceinspector-0.1.3.pyz
+1e52cd0761b9a02172d315a16bed651a954821f259ca6c3d9de6c64dd8be6475  smartdiff-0.1.1.pyz
