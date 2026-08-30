@@ -152,23 +152,54 @@ Verified SHA-256:
 
 Its historical exact binary is stored as `dist/artifactbuilder.pyz.part01` ... `part05` and can be reconstructed with final SHA verification.
 
+## Feature Acceptance Gate v1 — merged candidate mechanism
+
+Technical correctness and intent fulfillment are now treated as separate completion conditions for substantive new features and executable behavior changes.
+
+Before implementation, the AI writes an `offload-feature-acceptance/1` contract containing the original purpose, `MUST_WORK` / `MUST_NOT` / failure-behavior requirements, executable scenarios, and named evidence. Its canonical SHA-256 is pinned outside the implementation in task/controller state. The contract's own `locked_sha256` is tamper evidence; the external pre-implementation pin is the authority that prevents the implementation from silently rewriting its own acceptance target.
+
+After implementation:
+
+- Verification Runner produces deterministic scenario/evidence/requirement facts.
+- The program does **not** decide whether user intent was fulfilled.
+- The AI compares passing facts to the original purpose and writes an `offload-feature-intent-assessment/1` result.
+- Artifact Builder blocks a required feature release unless the locked contract, PASS acceptance facts, and matching `SATISFIED` intent assessment all agree.
+
+Repository-CI-validated candidates:
+
+| Candidate | Repository rebuild SHA-256 | CI |
+|---|---|---:|
+| Verification Runner `0.3.0` | `0d01fb6c834f117f4c2025b00764e755ec8ffa678b8fd7791df3f59dcd73aebc` | 8/8 self-test + acceptance PASS |
+| Artifact Builder `0.1.2` | `cb86838cc7419d6d49ab9a3e29f8664af144fcdb5aa1cfad9e67b0eec94abc4d` | 8/8 self-test + intent-gated release PASS |
+
+The final candidate workflow also passed pinned contract-hash checks, Sandbox Launcher v0.1.1 retro acceptance, a real historical Worker Hub plugin smoke test, and reciprocal Artifact Builder dogfood.
+
+These versions are **validated candidates, not current Library ACTIVE replacements**. Current active versions remain Verification Runner v0.2.0 and Artifact Builder v0.1.1 until exact active Library artifacts can be materialized and the full active-stack promotion loop passes.
+
+Detailed record: [`research/FEATURE_ACCEPTANCE_GATE_V1_2026-08-30.md`](research/FEATURE_ACCEPTANCE_GATE_V1_2026-08-30.md)
+
 ## Validation lifecycle
 
-A new or updated program is not considered complete just because it builds or passes its own self-test.
+A new or substantively updated program is not considered complete just because it builds or passes its own self-test.
 
 ```text
-candidate
+user intent
+  -> write Feature Acceptance Contract
+  -> pin contract SHA outside implementation
+  -> implement candidate
   -> Worker Hub integration where meaningful
   -> Workspace Inspector
   -> Smart Diff when a trustworthy comparison exists
-  -> Verification Runner with explicit contract / available real validators
-  -> Artifact Builder / Release Manager
+  -> Verification Runner technical facts + Feature Acceptance facts
+  -> AI intent assessment against original purpose
+  -> Artifact Builder acceptance-gated release
   -> reproduce discovered defects in permanent regression tests
+  -> full clean rerun
   -> reciprocal dogfood against affected existing tools
   -> COMPLETE
 ```
 
-A technically inapplicable step can be skipped, but the skip is explicit rather than silently converted into PASS.
+A technically inapplicable step can be skipped, but the skip is explicit rather than silently converted into PASS. Technical correctness does not substitute for intent fulfillment, and intent fulfillment does not substitute for technical verification.
 
 ## Architecture
 
@@ -208,7 +239,7 @@ The practical packaging rule used in that experiment was 400,000,000 bytes or le
 
 ## Next tool roadmap
 
-1. **Sandbox Launcher** — strong OS sandbox backend for native/opaque external executable verification.
+1. **Sandbox Launcher active-core completion** — materialize the exact current active core and rerun the mandatory clean loop before calling it the active sixth tool.
 2. **Local Index / Search Engine** — incremental code/document/config index and relationship lookup.
 3. **Log / Trace Analyzer** — deterministic failure clustering and compact evidence extraction.
 4. **Dependency / Impact Mapper** — dependency/config/reference graph and impacted-file/test candidates.
@@ -220,3 +251,5 @@ The practical packaging rule used in that experiment was 400,000,000 bytes or le
 - [`research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md`](research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md)
 - [`research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json`](research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json)
 - [`research/FACT_CONFIRMATION_REDESIGN_2026-08-30.md`](research/FACT_CONFIRMATION_REDESIGN_2026-08-30.md)
+- [`research/SANDBOX_LAUNCHER_LATEST_CORE_REVALIDATION_2026-08-30.json`](research/SANDBOX_LAUNCHER_LATEST_CORE_REVALIDATION_2026-08-30.json)
+- [`research/FEATURE_ACCEPTANCE_GATE_V1_2026-08-30.md`](research/FEATURE_ACCEPTANCE_GATE_V1_2026-08-30.md)
