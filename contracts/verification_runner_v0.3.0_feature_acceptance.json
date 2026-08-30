@@ -1,0 +1,51 @@
+{
+  "schema": "offload-feature-acceptance/1",
+  "contract_id": "verification-runner-0.3.0-feature-acceptance",
+  "target_id": "verificationrunner.pyz",
+  "purpose": "Confirm deterministic executable facts for requested functionality and feature acceptance without substituting program judgment for AI intent judgment.",
+  "requirements": [
+    {
+      "id": "VR-R1",
+      "type": "MUST_WORK",
+      "statement": "The runner exposes feature acceptance as facts-only and keeps AI intent judgment external.",
+      "evidence": ["VR-S1"]
+    },
+    {
+      "id": "VR-R2",
+      "type": "MUST_WORK",
+      "statement": "The runner self-test covers executable functionality contracts, locked acceptance contract drift, evidence files, and inconclusive handling.",
+      "evidence": ["VR-S2"]
+    },
+    {
+      "id": "VR-R3",
+      "type": "MUST_NOT",
+      "statement": "The runner must not fabricate functionality PASS when no functional contract is supplied.",
+      "evidence": ["VR-S2"]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "VR-S1",
+      "args": ["capabilities"],
+      "expect": {
+        "returncode_in": [0],
+        "stdout_json_subset": {
+          "status": "PASS",
+          "feature_acceptance": {
+            "facts_only": true,
+            "ai_intent_judgment_external": true
+          }
+        }
+      }
+    },
+    {
+      "id": "VR-S2",
+      "args": ["self-test"],
+      "expect": {
+        "returncode_in": [0],
+        "stdout_json_subset": {"status": "PASS", "passed": 8, "total": 8}
+      }
+    }
+  ],
+  "locked_sha256": "3bc51a091145251cb25b244b8ac794d4ada8e33f692fc0035267638af1bf592e"
+}
