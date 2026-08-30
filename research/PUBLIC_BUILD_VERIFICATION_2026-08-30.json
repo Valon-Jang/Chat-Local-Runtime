@@ -1,0 +1,66 @@
+{
+  "schema": "chat-local-runtime-public-build-verification/0.1",
+  "date": "2026-08-30",
+  "status": "PASS",
+  "note": "Public reference rebuild from recorded checkpoint; not byte-identical historical private scratch artifacts.",
+  "installer": {
+    "version": "0.1.0-public",
+    "install_status": "PASS",
+    "verify_status": "PASS",
+    "default_root": "/mnt/data/ai_program_lab"
+  },
+  "tools": {
+    "workerhub.pyz": {
+      "version": "0.1.1-public",
+      "status": "PASS",
+      "passed": 7,
+      "total": 7
+    },
+    "verificationrunner.pyz": {
+      "version": "0.1.1-public",
+      "status": "PASS",
+      "passed": 5,
+      "total": 5
+    },
+    "workspaceinspector.pyz": {
+      "version": "0.1.2-public",
+      "status": "PASS",
+      "passed": 14,
+      "total": 14
+    },
+    "smartdiff.pyz": {
+      "version": "0.1.0-public",
+      "status": "PASS",
+      "passed": 15,
+      "total": 15
+    }
+  },
+  "artifacts": {
+    "dist/smartdiff.pyz": {
+      "bytes": 4189,
+      "sha256": "40f4a392b25ea69a99f64ba1e543baac430cb0fdd5663977d65276792762c2cd"
+    },
+    "dist/verificationrunner.pyz": {
+      "bytes": 3704,
+      "sha256": "e205e651faf3f40c20a5d577916e9c5cf127ccc902d462073aa35c6594fd79db"
+    },
+    "dist/workerhub.pyz": {
+      "bytes": 2921,
+      "sha256": "df16e41eb749b1fec1c360a51a8f36131b44c7bfe0f425d3c0864b8f162d82c2"
+    },
+    "dist/workspaceinspector.pyz": {
+      "bytes": 3658,
+      "sha256": "1c91a206c69c469098f717d6fef9446e41a8c0f8afea7d4989defb80eb0b91c3"
+    }
+  },
+  "repo_installer_test": {
+    "install_status": "PASS",
+    "verify_status": "PASS",
+    "self_tests": {
+      "workerhub.pyz": "7/7 PASS",
+      "verificationrunner.pyz": "5/5 PASS",
+      "workspaceinspector.pyz": "14/14 PASS",
+      "smartdiff.pyz": "15/15 PASS"
+    }
+  }
+}
