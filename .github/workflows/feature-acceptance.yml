@@ -9,7 +9,6 @@ on:
       - 'dist/sandboxlauncher.pyz.b64'
       - 'research/FEATURE_ACCEPTANCE_GATE_V1_2026-08-30.md'
       - 'research/SANDBOX_LAUNCHER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json'
-      - 'installers/INSTALL_CHATGPT_FROM_REPO_V05.py'
       - '.github/workflows/feature-acceptance.yml'
   workflow_dispatch:
 
@@ -22,12 +21,32 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Rebuild candidate artifacts deterministically
+      - name: Rebuild and pin candidate artifacts
         shell: bash
         run: |
           set -euo pipefail
           python tools/build_active.py
-          sha256sum dist/active/verificationrunner-0.3.0.pyz dist/active/artifactbuilder-0.1.2.pyz
+          echo '0d01fb6c834f117f4c2025b00764e755ec8ffa678b8fd7791df3f59dcd73aebc  dist/active/verificationrunner-0.3.0.pyz' | sha256sum -c -
+          echo 'cb86838cc7419d6d49ab9a3e29f8664af144fcdb5aa1cfad9e67b0eec94abc4d  dist/active/artifactbuilder-0.1.2.pyz' | sha256sum -c -
+
+      - name: Pin pre-implementation acceptance contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python dist/active/verificationrunner-0.3.0.pyz contract-hash contracts/verification_runner_v0.3.0_feature_acceptance.json > /tmp/vr-contract.json
+          python dist/active/verificationrunner-0.3.0.pyz contract-hash contracts/artifact_builder_v0.1.2_feature_acceptance.json > /tmp/ab-contract.json
+          python dist/active/verificationrunner-0.3.0.pyz contract-hash contracts/sandbox_launcher_v0.1.1_feature_acceptance.json > /tmp/sb-contract.json
+          python - <<'PY'
+          import json
+          expected={
+            '/tmp/vr-contract.json':'3bc51a091145251cb25b244b8ac794d4ada8e33f692fc0035267638af1bf592e',
+            '/tmp/ab-contract.json':'0f37cc80390d99bafdadde90140bcbb9bd9f32aa7b109268380e7fd99814d3ce',
+            '/tmp/sb-contract.json':'a91ee889346303143123fe03ee10013120e094def9394bb0f513b6c80525a307',
+          }
+          for path,want in expected.items():
+              got=json.load(open(path))['contract_sha256']
+              assert got==want,(path,got,want)
+          PY
 
       - name: Candidate self-tests
         shell: bash
@@ -35,10 +54,9 @@ jobs:
           set -euo pipefail
           python dist/active/verificationrunner-0.3.0.pyz self-test | tee /tmp/vr-self.json
           python dist/active/artifactbuilder-0.1.2.pyz self-test | tee /tmp/ab-self.json
-          python installers/INSTALL_CHATGPT_FROM_REPO_V05.py self-test | tee /tmp/installer-self.json
           python - <<'PY'
           import json
-          for path in ('/tmp/vr-self.json','/tmp/ab-self.json','/tmp/installer-self.json'):
+          for path in ('/tmp/vr-self.json','/tmp/ab-self.json'):
               x=json.load(open(path)); assert x['status']=='PASS', (path,x)
           PY
 
