@@ -1,0 +1,13 @@
+{
+  "schema": "offload-feature-acceptance/1",
+  "contract_id": "example-feature",
+  "target_id": "tool.pyz",
+  "purpose": "Describe the user-visible purpose before implementation.",
+  "requirements": [
+    {"id":"R1","type":"MUST_WORK","statement":"Required behavior works.","evidence":["S1"]}
+  ],
+  "scenarios": [
+    {"id":"S1","args":["capabilities"],"expect":{"returncode_in":[0]}}
+  ],
+  "locked_sha256": "calculate from canonical contract with locked_sha256 omitted"
+}
