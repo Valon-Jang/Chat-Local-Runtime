@@ -8,6 +8,48 @@ Chat Local Runtime studies whether a general-purpose chat AI can turn execution 
 
 The project does **not** treat chat sandboxes as permanent operating systems, and small local tools are not intended to replace model reasoning.
 
+## Why this project exists
+
+This started as an experiment in a different question: **how much of its own environment can a chat AI actually perceive and use?**
+
+While probing that boundary, I found that there is a real separation between the user-facing chat and an execution workspace on the AI side: a place where the AI can call tools, work with files, and inspect some of the environment it has been given. More surprisingly, the AI itself could reason about that workspace and use it deliberately.
+
+That raised the next question: **what should this workspace actually be used for?**
+
+As the idea was refined with the AI, one useful direction emerged: fill the workspace with small local programs for inspection, verification, comparison, and artifact handling. The goal was not to give the AI abilities it fundamentally lacked, but to make repeated deterministic work cheaper, more consistent, and easier to verify.
+
+> **I started by testing the boundary of the AI, discovered that it had a workshop, and ended up filling the workshop with tools.**
+
+## Why a verification kit if the AI can already verify things?
+
+Most of these checks are things an AI **can** perform with its existing tools. That is not the point.
+
+The problem is that doing them manually can take several tool calls or turns, and repetitive verification is exactly where checks can be skipped, inconsistently interpreted, or forgotten after an implementation appears to work.
+
+The kit therefore focuses on checks that benefit from being made **deterministic, repeatable, and compact**:
+
+- run real validators, tests, and coverage tools and normalize their results
+- execute explicit functionality contracts instead of guessing whether behavior is correct
+- compare repeated verification runs and surface only newly broken, resolved, or changed facts
+- inspect structured data and artifacts in ways that ordinary text diffs do not cover well
+- return structured evidence that the AI can use to decide the next action
+
+In short:
+
+> **The kit does not replace AI capability; it compresses multi-step verification into structured evidence and makes the checks the AI may skip repeatable.**
+
+The program confirms facts. The AI keeps the judgment.
+
+## Why the reusable tools moved to ChatGPT Library
+
+The runtime worked, but the experiment exposed an important architectural limitation: **the workspace is isolated per Chat.**
+
+A tool placed in one conversation's workspace could not simply become a shared persistent tool for every other conversation. That made the per-chat workspace a poor canonical home for a reusable toolset even when the tools themselves were useful.
+
+The reusable generated artifacts were therefore moved to **ChatGPT Library**, while this repository remains the public research record, expected hashes, installers, historical fallback builds, and runtime experiments.
+
+The lesson was not that local tools were useless. It was that **a useful tool and the right place to persist that tool are two different problems.**
+
 ## Current active stack
 
 | Tool | Version | Role | Self-test |
