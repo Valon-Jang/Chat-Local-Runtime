@@ -1,0 +1,30 @@
+{
+  "schema": "offload-feature-acceptance/1",
+  "contract_id": "artifact-builder-0.1.2-feature-acceptance",
+  "target_id": "artifactbuilder.pyz",
+  "purpose": "Prevent final release of a substantively changed tool unless its locked feature acceptance facts pass and an AI intent assessment says the original purpose is satisfied.",
+  "requirements": [
+    {"id":"AB-R1","type":"MUST_WORK","statement":"The builder exposes a feature acceptance release gate.","evidence":["AB-S1"]},
+    {"id":"AB-R2","type":"MUST_NOT","statement":"A release requiring feature acceptance must be blocked when the acceptance contract is missing.","evidence":["AB-S2"]},
+    {"id":"AB-R3","type":"MUST_WORK","statement":"The builder self-test covers satisfied acceptance, contract drift, and unsatisfied intent blocking.","evidence":["AB-S3"]}
+  ],
+  "scenarios": [
+    {
+      "id":"AB-S1",
+      "args":["capabilities"],
+      "expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","feature_acceptance_gate":true}}
+    },
+    {
+      "id":"AB-S2",
+      "precreate":[{"path":"src/__main__.py","content":"print('fixture')\n"}],
+      "args":["build","{workdir}/src","--output","{workdir}/out","--release-version","x","--require-feature-acceptance"],
+      "expect":{"returncode_in":[1],"stdout_json_subset":{"decision":"BLOCK","feature_acceptance":{"reason":"ACCEPTANCE_CONTRACT_MISSING"}}}
+    },
+    {
+      "id":"AB-S3",
+      "args":["self-test"],
+      "expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","passed":8,"total":8}}
+    }
+  ],
+  "locked_sha256": "0f37cc80390d99bafdadde90140bcbb9bd9f32aa7b109268380e7fd99814d3ce"
+}
