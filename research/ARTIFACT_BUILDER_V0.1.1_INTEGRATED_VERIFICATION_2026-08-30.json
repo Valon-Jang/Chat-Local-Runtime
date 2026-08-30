@@ -1,0 +1,51 @@
+{
+  "schema": "artifact-builder-integrated-verification/0.1",
+  "date": "2026-08-30",
+  "status": "PASS",
+  "tool": "Artifact Builder / Release Manager",
+  "version": "0.1.1",
+  "supersedes": "0.1.0",
+  "final_sha256": "1677f84252d0e275f0448426ac6702318ad30589c462493aea533e1ddfe63c3a",
+  "completion_gate": {
+    "self_test": "16/16 PASS",
+    "hub_first": "PASS",
+    "workspace_inspector": "PASS",
+    "smart_diff": "PASS_WITH_REVIEWED_INTENTIONAL_CHANGES",
+    "verification_runner_source": "PASS",
+    "verification_runner_artifact": "PASS",
+    "self_host_build": "RELEASE",
+    "reciprocal_dogfood": "4/4 PASS"
+  },
+  "defect_found_and_fixed": {
+    "version": "0.1.0",
+    "problem": "Local Worker Hub invokes plugins as `request -` with JSON on stdin, but Artifact Builder v0.1.0 rejected positional `-`.",
+    "fix": "v0.1.1 accepts `request -` and reads the request JSON from stdin.",
+    "regression": "Permanent Hub stdin integration test added to self-test suite."
+  },
+  "forward_validation": {
+    "local_worker_hub": "real Hub invocation PASS",
+    "workspace_inspector": "source/workspace inspection PASS; no blocking anomaly",
+    "smart_diff": "intentional Hub-contract change identified and reviewed",
+    "verification_runner": "source and final artifact passed functionality/safety/performance/compatibility gates"
+  },
+  "reciprocal_dogfood": {
+    "workerhub.pyz": {"builder_decision": "RELEASE", "self_test": "7/7 PASS"},
+    "verificationrunner.pyz": {"builder_decision": "RELEASE", "self_test": "5/5 PASS"},
+    "workspaceinspector.pyz": {"builder_decision": "RELEASE", "self_test": "14/14 PASS"},
+    "smartdiff.pyz": {"builder_decision": "RELEASE", "self_test": "15/15 PASS"}
+  },
+  "artifact_source_boundary": {
+    "artifact_builder": "Exact verified v0.1.1 generated artifact mirrored to GitHub as byte-concatenated binary parts.",
+    "existing_four": "Exact active ChatGPT Library executables were not materializable in this runtime; reciprocal dogfood used the recorded GitHub public fallback builds.",
+    "claim_limit": "Compatibility evidence for the existing four applies to those public fallback builds and must not be represented as byte-identical validation of unavailable active Library binaries."
+  },
+  "mandatory_future_sequence": [
+    "Local Worker Hub",
+    "Workspace Inspector",
+    "Smart Diff / State Tracker when a trustworthy baseline exists",
+    "Verification Runner",
+    "Artifact Builder / Release Manager",
+    "fix defects and add regression tests, then rerun affected validation",
+    "reciprocal dogfood against pre-existing programs where technically applicable"
+  ]
+}

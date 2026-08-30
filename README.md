@@ -2,77 +2,133 @@
 
 **Experimental research project**
 
-Chat Local Runtime studies whether general-purpose chat AIs can turn execution and storage environments already exposed by the host chat product into a reusable file-based software layer.
+Chat Local Runtime studies whether a general-purpose chat AI can turn the execution and storage surfaces already exposed by the host product into a reusable file-based software layer.
 
-> Instead of regenerating every utility inside LLM context, the chat AI can build, verify, store, and reuse real executable files inside its available runtime.
+> Instead of regenerating every utility inside LLM context, the chat AI can build, inspect, diff, verify, package, store, and reuse real executable files.
 
 This project measures the boundary between model reasoning and machine-side reusable software. It does **not** treat chat sandboxes as permanent operating systems.
 
-## Current status
+## Current tool stack
 
-A ChatGPT runtime was used to build and validate four AI-first local tools as real `.pyz` files:
+Five AI-first local tools have now been built and validated:
 
-| Tool | Public build | Purpose | Public self-test |
+| Tool | Build | Purpose | Self-test |
 |---|---|---|---:|
-| Local Worker Hub | `0.1.1-public` | one-shot deterministic local offload / plugin execution | 7/7 PASS |
-| Verification Runner | `0.1.1-public` | program fingerprinting, static checks and controlled behavioral verification | 5/5 PASS |
-| Workspace Inspector | `0.1.2-public` | metadata-first workspace preprocessing and targeted-content planning | 14/14 PASS |
-| Smart Diff / State Tracker | `0.1.0-public` | semantic file/config/code/document change tracking | 15/15 PASS |
+| Local Worker Hub | `0.1.1-public` | common deterministic offload / plugin execution | 7/7 PASS |
+| Verification Runner | `0.1.1-public` | fingerprinting, static checks and controlled behavioral verification | 5/5 PASS |
+| Workspace Inspector | `0.1.2-public` in `dist/` | metadata-first workspace preprocessing and targeted-content planning | 14/14 PASS |
+| Smart Diff / State Tracker | `0.1.0-public` | semantic code/config/document change tracking | 15/15 PASS |
+| Artifact Builder / Release Manager | `0.1.1` | deterministic `.pyz`/ZIP build, SHA/manifest, verification gating and release packaging | 16/16 PASS |
 
-The executable public builds are under [`dist/`](dist/). A ChatGPT-oriented installer is under [`installers/`](installers/).
+The original four executable public fallback builds remain under [`dist/`](dist/). Artifact Builder v0.1.1 is the exact verified generated artifact. Because the available GitHub writer is text/bounded-blob oriented, that executable is stored as five binary parts under `dist/artifactbuilder.pyz.part01` ... `part05`; installer v0.3 concatenates them byte-for-byte and checks the final SHA-256.
 
-> **Public-build note:** the original private scratch artifacts were not durable across runtime replacement. The files in this repository are public reference rebuilds from the recorded feature/validation checkpoint, followed by fresh public self-tests. They are not claimed to be byte-identical copies of the original scratch binaries or of newer active artifacts recovered through ChatGPT Library.
+Artifact Builder v0.1.1 SHA-256:
 
-## Storage model: Library-first inside ChatGPT, GitHub as reference/fallback
+```text
+1677f84252d0e275f0448426ac6702318ad30589c462493aea533e1ddfe63c3a
+```
 
-The project now separates **active ChatGPT artifact reuse** from **public reproducibility**.
+> **Identity boundary:** the older four GitHub executables are public reference/fallback rebuilds and are not claimed to be byte-identical to newer ChatGPT Library artifacts. Artifact Builder v0.1.1 is an exact mirror of the verified generated artifact.
 
-### ChatGPT Library — active artifact store
+## Mandatory new / updated program validation lifecycle
 
-For ChatGPT-to-ChatGPT reuse, the preferred path is to recover the exact generated `.pyz`, ZIP, and verification artifacts from ChatGPT Library when they are available there.
+A new offload program is **not complete merely because it builds or passes its own self-test**. Unless a step is technically inapplicable, use this order:
 
-Why:
+```text
+new / modified candidate
+        |
+        v
+1. Local Worker Hub first
+   - run Hub health/self-test
+   - invoke the candidate through the real Hub plugin contract when meaningful
+   - validate stdin/JSON/exit-code/result behavior
+        |
+        v
+2. Workspace Inspector
+   - inspect source/workspace metadata first
+   - identify key files, structure, anomalies, integration points and targeted reads
+        |
+        v
+3. Smart Diff / State Tracker
+   - compare against a trustworthy previous version/baseline when available
+   - separate intentional changes from accidental collateral changes
+        |
+        v
+4. Verification Runner
+   - verify source and final executable artifact where applicable
+   - functionality / safety / performance / compatibility gates
+        |
+        v
+5. Artifact Builder / Release Manager
+   - deterministic .pyz or ZIP
+   - SHA-256 + manifest
+   - normalize verifier evidence
+   - BLOCK / RELEASE_WITH_WARNINGS / RELEASE
+        |
+        v
+6. Defect loop
+   - if a meaningful problem is found, fix it
+   - add a permanent regression test when reproducible
+   - rerun the affected sequence; do not promote the known-bad build
+        |
+        v
+7. Reciprocal dogfood
+   - run the new program against each pre-existing program where its role applies
+   - rebuild / inspect / analyze / verify as appropriate
+   - rerun every affected original program's own self-test
+        |
+        v
+COMPLETE
+```
 
-- shorter cross-chat recovery path inside ChatGPT
-- less need to reconstruct a program from prose or source descriptions
-- preserves the actual generated artifact instead of assuming a public rebuild is identical
-- convenient for small AI-first runtime tools whose executable shells are only tens of kilobytes
+### Exceptions
 
-### GitHub — public reference, fallback and reconstruction store
+Skip a step only when it is technically inapplicable or adds no meaningful evidence—for example Smart Diff without a trustworthy baseline, executable packaging checks for a documentation-only change, or a tool whose role cannot operate on the target. A skip is recorded explicitly; it is not a silent shortcut.
 
-This repository remains useful for:
+This lifecycle was adopted after it caught a real Artifact Builder v0.1.0 integration defect: Local Worker Hub calls plugins as `request -` with JSON on stdin, while v0.1.0 rejected the positional `-`. v0.1.1 fixed the contract and added a permanent Hub stdin regression test.
 
-- public, inspectable documentation
-- version history and commits
-- public reference rebuilds
+Detailed evidence: [`research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json`](research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json)
+
+## Storage model: Library-first, GitHub fallback/reference
+
+### ChatGPT Library
+
+Preferred for exact active artifacts when available:
+
+- shortest cross-chat recovery path
+- preserves the actual generated `.pyz`, ZIP and verification outputs
+- avoids reconstructing a program from prose
+
+### GitHub `Chat-Local-Runtime`
+
+Used for:
+
+- public documentation and version history
+- reference/fallback executables
+- exact mirrored artifact parts when available
 - SHA-256 records
-- the repository-based ChatGPT installer
-- external recovery and reproducibility
-- benchmark and research records
+- installer/reconstruction logic
+- benchmark and research evidence
 
-The important limitation is that **a file existing in GitHub does not mean it is already installed in a fresh ChatGPT runtime**. A retrieval/install step is still required. Likewise, a public rebuild in this repository is not assumed to be byte-identical to the latest active artifact in Library.
-
-The two stores therefore have different jobs:
+A file existing in GitHub does **not** mean it is already installed in a fresh ChatGPT runtime. A retrieval/install step is still required.
 
 ```text
 ChatGPT Library
-  -> active ChatGPT artifact reuse
+  -> preferred exact active artifact reuse
 
 GitHub Chat-Local-Runtime
   -> public reference / fallback / reconstruction / research history
 ```
 
-Detailed rationale and limitations: [`research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md`](research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md)
-
 ## Install in a ChatGPT code runtime
 
-Download/unpack this repository into a compatible ChatGPT code runtime, then run:
+The five-tool installer is:
 
 ```bash
-python installers/INSTALL_CHATGPT_FROM_REPO.py install
+python installers/INSTALL_CHATGPT_FROM_REPO_V03.py install
 ```
 
-Default installation root:
+Default root:
 
 ```text
 /mnt/data/ai_program_lab
@@ -81,21 +137,28 @@ Default installation root:
 Verify an existing installation:
 
 ```bash
-python installers/INSTALL_CHATGPT_FROM_REPO.py verify
+python installers/INSTALL_CHATGPT_FROM_REPO_V03.py verify
 ```
 
-The installer requires no network access. It verifies SHA-256, installs all four real `.pyz` files, and executes every tool's self-test.
+Verify repository artifacts before installation:
 
-It creates:
+```bash
+python installers/INSTALL_CHATGPT_FROM_REPO_V03.py source-verify
+```
+
+Installer v0.3 is offline, reconstructs `artifactbuilder.pyz` by concatenating the five checked-in parts, verifies its SHA-256, installs all five programs, and executes each tool's own self-test. It does not assume every program exposes an identical CLI contract; Artifact Builder, for example, has `self-test` but no `capabilities` verb.
+
+Installed layout:
 
 ```text
 ai_program_lab/
-├── code/
 ├── programs/
 │   ├── workerhub.pyz
 │   ├── verificationrunner.pyz
 │   ├── workspaceinspector.pyz
-│   └── smartdiff.pyz
+│   ├── smartdiff.pyz
+│   └── artifactbuilder.pyz
+├── code/
 ├── tests/
 ├── fixtures/
 ├── benchmarks/
@@ -106,7 +169,35 @@ ai_program_lab/
 └── scratch/
 ```
 
-This is runtime-local scratch. If the host replaces the container/runtime, rerunning the installer restores the file-based tool layer; it does not make the host sandbox itself durable.
+## Artifact Builder / Release Manager v0.1.1
+
+Pipeline:
+
+```text
+source folder
+  -> inspect
+  -> choose pure .pyz or ZIP
+  -> deterministic package
+  -> SHA-256 + file manifest
+  -> static checks
+  -> Verification Runner adapter
+  -> BLOCK / RELEASE_WITH_WARNINGS / RELEASE
+  -> final release ZIP
+```
+
+Properties:
+
+- Python projects and general folders
+- runnable Python selects pure `.pyz`; general folders select ZIP
+- source is read-only
+- no network
+- symlinks are not followed
+- secret-looking files are excluded by default
+- nested output directories are excluded to prevent recursive self-copy
+- accepts existing verifier JSON or an external verifier command adapter
+- Hub-compatible `request -` stdin JSON contract
+- self-host build reproduced the exact v0.1.1 artifact SHA
+- reciprocal dogfood rebuilt the four pre-existing public fallback tools and preserved self-tests: 7/7, 5/5, 14/14, 15/15 PASS
 
 ## Core architecture
 
@@ -114,112 +205,51 @@ This is runtime-local scratch. If the host replaces the container/runtime, rerun
 Chat AI
   -> local runtime / workspace
       -> Local Worker Hub
-          -> Verification Runner
           -> Workspace Inspector
           -> Smart Diff / State Tracker
-          -> future verified plugins/tools
+          -> Verification Runner
+          -> Artifact Builder / Release Manager
+          -> future verified tools
       -> tests / fixtures / benchmarks
       -> cache / indexes / artifacts
   -> compact verified result back to the model
-  -> downloadable program/artifact back to the user
 ```
 
-The key distinction is **file-based capability vs. LLM-context capability**. A reusable capability can exist as an actual script, executable, fixture, index, cache, benchmark, or package instead of being regenerated as prose/code on every task.
+The key distinction is **file-based capability vs. LLM-context capability**: a reusable capability can exist as an executable, script, fixture, index, cache, benchmark, or package instead of being regenerated every task.
 
-## Preliminary ChatGPT runtime observations
+## Preliminary runtime observations
 
-Direct measurements in one ChatGPT execution environment on 2026-08-30 observed approximately:
+One tested ChatGPT execution environment on 2026-08-30 showed approximately:
 
 - ~30 GiB available scratch storage during the probe
 - 4 GiB effective memory ceiling
 - ~4 sustained CPU cores of effective entitlement
-- shared local filesystem across separate local tool calls
-- local process namespace sharing
+- shared local filesystem across local tool calls
 - loopback TCP and Unix-domain socket IPC
-- detached-process survival across ordinary local tool calls in the tested session
-- relatively expensive fresh Python startup compared with warm reuse
+- detached-process survival across ordinary local tool calls in that session
+- relatively expensive fresh Python startup vs warm reuse
 - no general outbound internet access from the tested local execution path
 
-These are **empirical observations, not guaranteed OpenAI product specifications**.
+These are empirical observations, **not guaranteed OpenAI product specifications**.
 
 ## Generated artifact handoff boundary
 
-We separately tested the maximum generated file that could be handed from the tested ChatGPT runtime to the user through the chat download path.
-
-| Generated artifact size | User-verified result |
-|---:|:---|
-| 100,000,000 bytes | PASS |
-| 400,000,000 bytes | PASS |
-| 445,000,000 bytes | PASS |
-| 449,000,000 bytes | PASS |
-| 449,500,000 bytes | FAIL |
-| 450,000,000 bytes | FAIL |
-| 475,000,000 bytes | FAIL |
-| 490,000,000 bytes | FAIL |
-| 500,000,000 bytes | FAIL |
-| 512,000,000 bytes | FAIL |
-| 520,000,000 bytes | FAIL |
-
-Empirical boundary from that run:
+User-verified generated-file handoff in that run:
 
 ```text
 449,000,000 bytes <= successful boundary < 449,500,000 bytes
 ```
 
-Practical packaging rule for this measured environment: keep a single downloadable package at **400,000,000 bytes or less** for margin.
-
-This is a **generated-file handoff benchmark**, not proof that a model can correctly author a 449 MB software project.
-
-## Why this is worth measuring
-
-Adjacent LLM research already demonstrates tool creation, executable skills, verification, and reusable code libraries. This project does not claim those ideas are new.
-
-The narrower research questions are:
-
-> **Can a general-purpose chat product's own built-in execution/storage surface be bootstrapped into a reusable local software and verification runtime without requiring a separate agent framework?**
-
-and:
-
-> **What are the actual runtime, persistence, build, package, and generated-artifact handoff limits of each chat product?**
-
-Four limits should be measured separately:
-
-1. local workspace capacity
-2. user upload limit
-3. generated-artifact handoff limit
-4. durable storage limit
+Practical rule used in this research: keep a single downloadable package at **400,000,000 bytes or less** for margin. This is a file-handoff benchmark, not proof that a model can correctly author a 449 MB software project.
 
 ## Next tool roadmap
 
-The next programs are prioritized by how much they strengthen the existing stack.
+Artifact Builder is complete at v0.1.1. Next priorities:
 
-1. **Artifact Builder / Release Manager**
-   - automate `source -> .pyz/ZIP -> SHA-256/manifest -> Verification Runner -> verified release package`
-   - primary goal: eliminate source/artifact drift and repeated manual packaging
-
-2. **Sandbox Launcher**
-   - provide a strong OS sandbox backend for Verification Runner
-   - primary goal: safely behavior-test native/opaque external executables instead of stopping at `BLOCKED_NEEDS_SANDBOX`
-
-3. **Local Index / Search Engine**
-   - incremental code/document/config index and relationship lookup
-   - primary goal: answer repeated workspace lookup questions without rescanning everything
-
-4. **Log / Trace Analyzer**
-   - deterministic clustering and compression of large logs/traces into failure signatures and minimal evidence
-   - primary goal: reduce model-visible log volume while improving reproducibility
-
-5. **Dependency / Impact Mapper**
-   - dependency/config/reference graph plus impacted-file and test candidates
-   - primary goal: strengthen Smart Diff impact ranking and Verification Runner test selection
-
-## Next benchmark experiments
-
-- Build real 10 MB / 50 MB / 100 MB / 200+ MB program packages.
-- Measure build success, tests, integrity, download success, external execution, build time, memory and scratch use.
-- Measure reuse benefit versus regenerating the same utility.
-- Compare equivalent ChatGPT, Claude and other chat-product runtime surfaces where fair testing is possible.
-- Extend the tool layer only with verified, bounded components.
+1. **Sandbox Launcher** — strong OS sandbox backend for behavior-testing native/opaque external executables.
+2. **Local Index / Search Engine** — incremental code/document/config index and relationship lookup.
+3. **Log / Trace Analyzer** — deterministic failure clustering and compact evidence extraction.
+4. **Dependency / Impact Mapper** — dependency/config/reference graph and impacted-file/test candidates.
 
 ## Safety boundary
 
@@ -228,5 +258,6 @@ This research uses capabilities exposed by the host runtime. It does not depend 
 ## Research records
 
 - [`research/INITIAL_FINDINGS_2026-08-30.md`](research/INITIAL_FINDINGS_2026-08-30.md)
-- [`research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json`](research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json)
 - [`research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md`](research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md)
+- [`research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json`](research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json)
+- [`research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json`](research/ARTIFACT_BUILDER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json)
