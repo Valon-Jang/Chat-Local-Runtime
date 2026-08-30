@@ -2,31 +2,88 @@
 
 **Experimental research project**
 
-Chat Local Runtime studies whether general-purpose chat AIs can turn the execution and storage environments already provided by the host chat product into a reusable software layer.
+Chat Local Runtime studies whether general-purpose chat AIs can turn execution and storage environments already exposed by the host chat product into a reusable file-based software layer.
 
-> Instead of repeatedly regenerating tools inside LLM context, the chat AI builds, verifies, stores, and reuses real executable files inside its available runtime.
+> Instead of regenerating every utility inside LLM context, the chat AI can build, verify, store, and reuse real executable files inside its available runtime.
 
-This is not a claim that chat sandboxes are permanent operating systems. The project measures what is actually exposed, what survives, what can be reused, and where the product boundaries are.
+This project measures the boundary between model reasoning and machine-side reusable software. It does **not** treat chat sandboxes as permanent operating systems.
 
-## Core idea
+## Current status
 
-A chat product may already expose enough local capability to support a small AI-owned software workspace:
+A ChatGPT runtime was used to build and validate four AI-first local tools as real `.pyz` files:
+
+| Tool | Public build | Purpose | Public self-test |
+|---|---|---|---:|
+| Local Worker Hub | `0.1.1-public` | one-shot deterministic local offload / plugin execution | 7/7 PASS |
+| Verification Runner | `0.1.1-public` | program fingerprinting, static checks and controlled behavioral verification | 5/5 PASS |
+| Workspace Inspector | `0.1.2-public` | metadata-first workspace preprocessing and targeted-content planning | 14/14 PASS |
+| Smart Diff / State Tracker | `0.1.0-public` | semantic file/config/code/document change tracking | 15/15 PASS |
+
+The executable public builds are under [`dist/`](dist/). A ChatGPT-oriented installer is under [`installers/`](installers/).
+
+> **Public-build note:** the original private scratch artifacts were not durable across runtime replacement. The files in this repository are public reference rebuilds from the recorded feature/validation checkpoint, followed by fresh public self-tests. They are not claimed to be byte-identical copies of the original scratch binaries.
+
+## Install in a ChatGPT code runtime
+
+Download/unpack this repository into a compatible ChatGPT code runtime, then run:
+
+```bash
+python installers/INSTALL_CHATGPT_FROM_REPO.py install
+```
+
+Default installation root:
+
+```text
+/mnt/data/ai_program_lab
+```
+
+Verify an existing installation:
+
+```bash
+python installers/INSTALL_CHATGPT_FROM_REPO.py verify
+```
+
+The installer requires no network access. It verifies SHA-256, installs all four real `.pyz` files, and executes every tool's self-test.
+
+It creates:
+
+```text
+ai_program_lab/
+├── code/
+├── programs/
+│   ├── workerhub.pyz
+│   ├── verificationrunner.pyz
+│   ├── workspaceinspector.pyz
+│   └── smartdiff.pyz
+├── tests/
+├── fixtures/
+├── benchmarks/
+├── artifacts/
+├── cache/
+├── runtime/
+├── logs/
+└── scratch/
+```
+
+This is runtime-local scratch. If the host replaces the container/runtime, rerunning the installer restores the file-based tool layer; it does not make the host sandbox itself durable.
+
+## Core architecture
 
 ```text
 Chat AI
   -> local runtime / workspace
-      -> reusable validators
-      -> inspectors / diff tools
-      -> benchmarks
-      -> indexes / caches
-      -> worker processes
-      -> artifact builders
-      -> packaged programs
+      -> Local Worker Hub
+          -> Verification Runner
+          -> Workspace Inspector
+          -> Smart Diff / State Tracker
+          -> future verified plugins/tools
+      -> tests / fixtures / benchmarks
+      -> cache / indexes / artifacts
   -> compact verified result back to the model
-  -> downloadable artifact back to the user
+  -> downloadable program/artifact back to the user
 ```
 
-The important distinction is **file-based capability vs. LLM-context capability**. A verified tool can exist as an actual script, executable, fixture, index, or package rather than being regenerated as natural-language instructions on every task.
+The key distinction is **file-based capability vs. LLM-context capability**. A reusable capability can exist as an actual script, executable, fixture, index, cache, benchmark, or package instead of being regenerated as prose/code on every task.
 
 ## Preliminary ChatGPT runtime observations
 
@@ -39,145 +96,71 @@ Direct measurements in one ChatGPT execution environment on 2026-08-30 observed 
 - local process namespace sharing
 - loopback TCP and Unix-domain socket IPC
 - detached-process survival across ordinary local tool calls in the tested session
-- expensive fresh Python startup relative to warm persistent workers
+- relatively expensive fresh Python startup compared with warm reuse
 - no general outbound internet access from the tested local execution path
 
-These are **empirical observations, not guaranteed OpenAI product specifications**. Runtime/container replacement may invalidate them.
-
-## Reusable program workspace
-
-The initial experimental workspace separates:
-
-- reusable source code
-- stable runnable programs
-- tests
-- fixtures and goldens
-- benchmarks
-- generated artifacts
-- caches and indexes
-- runtime sockets/PIDs
-- logs
-- disposable scratch work
-
-Candidate reusable components include:
-
-1. **Worker Hub** — persistent local command/worker runtime
-2. **Workspace Inspector** — file tree, metadata, hashes, dependencies, entry points
-3. **Smart Diff / State Tracker** — detect meaningful changes without rereading everything
-4. **Verification Runner** — regression, output hash, performance and correctness checks
-5. **Artifact Builder** — clean, test, package, hash and prepare downloads
-6. **Local Index/Search** — machine-side retrieval with compact model-visible results
-7. **External Action Adapters** — validated bridges to user-authorized external systems
+These are **empirical observations, not guaranteed OpenAI product specifications**.
 
 ## Generated artifact handoff boundary
 
-We empirically tested how large a generated artifact could be handed from the ChatGPT runtime back to the user through the chat download path.
+We separately tested the maximum generated file that could be handed from the tested ChatGPT runtime to the user through the chat download path.
 
-Observed results:
-
-| Generated artifact size | Result |
+| Generated artifact size | User-verified result |
 |---:|:---|
+| 100,000,000 bytes | PASS |
 | 400,000,000 bytes | PASS |
 | 445,000,000 bytes | PASS |
 | 449,000,000 bytes | PASS |
 | 449,500,000 bytes | FAIL |
 | 450,000,000 bytes | FAIL |
+| 475,000,000 bytes | FAIL |
+| 490,000,000 bytes | FAIL |
 | 500,000,000 bytes | FAIL |
+| 512,000,000 bytes | FAIL |
+| 520,000,000 bytes | FAIL |
 
-Current empirical boundary:
+Empirical boundary from that run:
 
-> **449,000,000 bytes succeeds; 449,500,000 bytes fails.**
+```text
+449,000,000 bytes <= successful boundary < 449,500,000 bytes
+```
 
-For practical packaging we currently use **400,000,000 bytes or less** as a conservative single-artifact target.
-
-### Important interpretation
+Practical packaging rule for this measured environment: keep a single downloadable package at **400,000,000 bytes or less** for margin.
 
 This is a **generated-file handoff benchmark**, not proof that a model can correctly author a 449 MB software project.
 
-The size-boundary test deliberately used generated binary artifacts to isolate the transport/handoff layer. Program-generation capability must be benchmarked separately with real builds, tests, packaging, download and execution verification.
-
-The measured handoff boundary is also distinct from documented upload limits. OpenAI currently documents a 512 MB per-file upload limit for ChatGPT uploads; that does not establish the generated-artifact download boundary measured here.
-
 ## Why this is worth measuring
 
-Existing LLM tool-use/tool-making work commonly studies whether models can:
+Adjacent LLM research already demonstrates tool creation, executable skills, verification, and reusable code libraries. This project does not claim those ideas are new.
 
-- generate executable tools
-- pass unit tests
-- create reusable skill libraries
-- operate in sandboxes
-- reuse code across tasks
+The narrower research questions are:
 
-Our initial prior-art search found related work such as **LLM Tool Maker (LATM)**, **CRAFT**, **Voyager**, **ReGAL**, **TroVE**, and newer executable-agent/tool-library approaches. These establish that reusable executable capability is not itself a new idea.
+> **Can a general-purpose chat product's own built-in execution/storage surface be bootstrapped into a reusable local software and verification runtime without requiring a separate agent framework?**
 
-The less-explored question is narrower and product-oriented:
-
-> **Can a general-purpose chat product's own built-in execution and storage surface be bootstrapped into a reusable local verification/software runtime, without requiring a separate agent framework?**
-
-A second under-documented question is:
+and:
 
 > **What are the actual runtime, persistence, build, package, and generated-artifact handoff limits of each chat product?**
 
-In the initial search we did not find a well-known public benchmark focused on product-by-product MB-scale generated-artifact handoff boundaries. This is a preliminary search result, not a claim that no such work exists anywhere.
+Four limits should be measured separately:
 
-## Four limits that must be separated
+1. local workspace capacity
+2. user upload limit
+3. generated-artifact handoff limit
+4. durable storage limit
 
-Cross-product comparisons should distinguish:
+## Next experiments
 
-1. **Local workspace capacity** — temporary compute/storage available to the assistant
-2. **Upload limit** — what the user can send into the chat
-3. **Generated-artifact handoff limit** — what the assistant can return as a real downloadable file
-4. **Durable storage limit** — what can persist beyond the current execution environment through officially supported storage
-
-Conflating these produces misleading claims.
-
-## Next benchmark: real programs
-
-The next stage will replace empty-size transfer artifacts with real software packages.
-
-Suggested ladder:
-
-- 10 MB
-- 50 MB
-- 100 MB
-- 200+ MB where practical
-
-For every package:
-
-1. build inside the chat-local runtime
-2. run automated tests
-3. verify expected output
-4. package the program
-5. calculate artifact size and SHA-256
-6. hand the artifact to the user
-7. verify successful download
-8. where possible, verify execution outside the chat runtime
-
-Metrics:
-
-- build success
-- test success
-- package integrity
-- download success
-- external execution success
-- build time
-- peak memory
-- scratch-space consumption
-- model-visible context required
-- reuse benefit vs regenerating the tool
-
-## Cross-product direction
-
-The project intends to compare ChatGPT, Claude, and other chat products only where equivalent capabilities can be measured fairly.
-
-Product documentation may expose different limits at the Chat UI, API, and file-storage layers. Each surface should therefore be measured independently rather than treated as one universal product limit.
+- Build real 10 MB / 50 MB / 100 MB / 200+ MB program packages.
+- Measure build success, tests, integrity, download success, external execution, build time, memory and scratch use.
+- Measure reuse benefit versus regenerating the same utility.
+- Compare equivalent ChatGPT, Claude and other chat-product runtime surfaces where fair testing is possible.
+- Extend the tool layer only with verified, bounded components.
 
 ## Safety boundary
 
-This research uses capabilities already exposed by the host runtime. It does not require sandbox escape, hidden-service access, rate-limit bypass, or deliberate circumvention of product safeguards.
+This research uses capabilities exposed by the host runtime. It does not depend on sandbox escape, hidden-service discovery, rate-limit bypass, or deliberate circumvention of platform safeguards.
 
-## Status
+## Research records
 
-Early experimental research. Measurements are reproducible checkpoints, not permanent vendor specifications.
-
-See [`research/INITIAL_FINDINGS_2026-08-30.md`](research/INITIAL_FINDINGS_2026-08-30.md) for the first measurement record.
+- [`research/INITIAL_FINDINGS_2026-08-30.md`](research/INITIAL_FINDINGS_2026-08-30.md)
+- [`research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json`](research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json)
