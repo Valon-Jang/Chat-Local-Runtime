@@ -1,0 +1,7 @@
+{
+  "schema":"offload-feature-intent-assessment/1",
+  "contract_sha256":"0f37cc80390d99bafdadde90140bcbb9bd9f32aa7b109268380e7fd99814d3ce",
+  "status":"SATISFIED",
+  "evidence_ids":["AB-R1","AB-R2","AB-R3"],
+  "rationale":"Observed acceptance facts directly cover the stated purpose and required failure behavior for this release."
+}

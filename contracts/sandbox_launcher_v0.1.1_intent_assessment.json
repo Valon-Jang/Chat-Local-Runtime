@@ -1,0 +1,7 @@
+{
+  "schema":"offload-feature-intent-assessment/1",
+  "contract_sha256":"a91ee889346303143123fe03ee10013120e094def9394bb0f513b6c80525a307",
+  "status":"SATISFIED",
+  "evidence_ids":["SB-R1","SB-R2","SB-R3","SB-R4"],
+  "rationale":"The live artifact self-test plus the recorded integrated verification evidence directly cover strong sandbox execution, Python .pyz support, network/host isolation, timeout enforcement, and strong-default behavior."
+}

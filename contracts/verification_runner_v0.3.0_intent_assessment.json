@@ -1,0 +1,7 @@
+{
+  "schema":"offload-feature-intent-assessment/1",
+  "contract_sha256":"3bc51a091145251cb25b244b8ac794d4ada8e33f692fc0035267638af1bf592e",
+  "status":"SATISFIED",
+  "evidence_ids":["VR-R1","VR-R2","VR-R3"],
+  "rationale":"Observed acceptance facts directly cover the stated purpose and required failure behavior for this release."
+}

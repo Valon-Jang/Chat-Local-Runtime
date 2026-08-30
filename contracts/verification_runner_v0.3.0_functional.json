@@ -1,0 +1,7 @@
+{
+  "schema":"offload-functional-contract/1",
+  "cases":[
+    {"id":"capabilities","args":["capabilities"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","version":"0.3.0","ai_contract_version":"offload-ai/1"}}},
+    {"id":"self-test","args":["self-test"],"timeout_seconds":180,"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","passed":8,"total":8}}}
+  ]
+}

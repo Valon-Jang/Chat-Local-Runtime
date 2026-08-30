@@ -1,0 +1,35 @@
+{
+  "schema": "offload-feature-acceptance/1",
+  "contract_id": "sandbox-launcher-0.1.1-retro-feature-acceptance",
+  "target_id": "sandboxlauncher.pyz",
+  "purpose": "Run native/opaque executables and Python .pyz tools only inside a strong OS sandbox, block network and host mutation, enforce timeout/resource limits, and avoid silent weak fallback.",
+  "requirements": [
+    {"id":"SB-R1","type":"MUST_WORK","statement":"The active Sandbox Launcher self-test succeeds as an executable artifact.","evidence":["SB-S1"]},
+    {"id":"SB-R2","type":"MUST_WORK","statement":"The strong backend isolates native ELF and Python .pyz execution.","evidence":["SB-E1"]},
+    {"id":"SB-R3","type":"MUST_NOT","statement":"Sandboxed targets cannot see host /etc/passwd, open network sockets, or write the host test path.","evidence":["SB-E1"]},
+    {"id":"SB-R4","type":"FAILURE_BEHAVIOR","statement":"The launcher uses a strong-default design with no silent weak-subprocess fallback and enforces timeout/resource limits.","evidence":["SB-E1"]}
+  ],
+  "scenarios": [
+    {
+      "id":"SB-S1",
+      "args":["self-test"],
+      "timeout_seconds":180,
+      "expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS"}}
+    }
+  ],
+  "evidence_files": [
+    {
+      "id":"SB-E1",
+      "path":"../research/SANDBOX_LAUNCHER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json",
+      "json_subset":{
+        "status":"PASS",
+        "security_behavior":{
+          "strong_default":true,
+          "backend":"linux_chroot_seccomp",
+          "probes":["host /etc/passwd hidden","socket blocked EPERM","host path write denied","timeout enforced","native ELF isolated execution","Python .pyz isolated execution"]
+        }
+      }
+    }
+  ],
+  "locked_sha256":"a91ee889346303143123fe03ee10013120e094def9394bb0f513b6c80525a307"
+}
