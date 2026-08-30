@@ -14,15 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Materialize candidate and builder
+      - name: Materialize candidate and report hashes
         shell: bash
         run: |
           set -euo pipefail
           base64 -d dist/sandboxlauncher.pyz.b64 > sandboxlauncher.pyz
           cat dist/artifactbuilder.pyz.part01 dist/artifactbuilder.pyz.part02 dist/artifactbuilder.pyz.part03 dist/artifactbuilder.pyz.part04 dist/artifactbuilder.pyz.part05 > artifactbuilder.pyz
+          echo '--- observed active hashes ---'
+          sha256sum dist/active/*.pyz sandboxlauncher.pyz artifactbuilder.pyz
+          echo '--- recorded active hashes ---'
+          cat dist/active/SHA256SUMS.txt
           echo '5e8f1b73ec0bb2628bae74e449dc624fbc744c351ce15a21aa2ff4e5c22a4d85  sandboxlauncher.pyz' | sha256sum -c -
           echo '1677f84252d0e275f0448426ac6702318ad30589c462493aea533e1ddfe63c3a  artifactbuilder.pyz' | sha256sum -c -
-          (cd dist/active && sha256sum -c SHA256SUMS.txt)
       - name: Active core self-tests and interfaces
         shell: bash
         run: |
