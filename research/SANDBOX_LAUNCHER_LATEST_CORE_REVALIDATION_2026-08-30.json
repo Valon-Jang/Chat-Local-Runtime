@@ -1,0 +1,71 @@
+{
+  "schema": "sandbox-launcher-latest-core-revalidation/0.1",
+  "date": "2026-08-30",
+  "status": "BLOCKED_CURRENT_ACTIVE_ARTIFACT_MATERIALIZATION",
+  "tool": "Sandbox Launcher",
+  "candidate_version": "0.1.1",
+  "candidate_sha256": "5e8f1b73ec0bb2628bae74e449dc624fbc744c351ce15a21aa2ff4e5c22a4d85",
+  "prior_generation_validation": {
+    "status": "PASS",
+    "scope": "historical/public fallback five-tool generation",
+    "self_test": "13/13 PASS",
+    "forward_clean_loop": "PASS",
+    "reciprocal_dogfood": "5/5 PASS",
+    "note": "This evidence remains valid for the exact fallback generation tested, but does not prove reciprocal compatibility with the later fact-confirmation active core."
+  },
+  "current_active_core_expected": {
+    "workerhub.pyz": {
+      "version": "0.1.1",
+      "sha256": "2ef1ad5a0e8270ca6e1cc8794058ae04d2f626de7b982331e0bf5596833905b5"
+    },
+    "verificationrunner.pyz": {
+      "version": "0.2.0",
+      "sha256": "641da71d80593422ec0d93a8d98930ccc62af8602f2aff05f8dd037feb3bccc3"
+    },
+    "workspaceinspector.pyz": {
+      "version": "0.1.3",
+      "sha256": "2317ac17d3fb6cfa6e8983ee1dcb91523e7a86b2639f7ce8c4f58f3bbb49a26d"
+    },
+    "smartdiff.pyz": {
+      "version": "0.1.1",
+      "sha256": "1e52cd0761b9a02172d315a16bed651a954821f259ca6c3d9de6c64dd8be6475"
+    },
+    "artifactbuilder.pyz": {
+      "version": "0.1.1",
+      "sha256": "1677f84252d0e275f0448426ac6702318ad30589c462493aea533e1ddfe63c3a"
+    }
+  },
+  "revalidation_attempt": {
+    "github_actions_runs": [33317599078, 33317651194],
+    "sandbox_artifact_sha_check": "PASS",
+    "artifact_builder_sha_check": "PASS",
+    "github_active_binary_probe": "FAIL_DISTRIBUTION_ARTIFACTS_INVALID",
+    "observed_truncated_github_hashes": {
+      "workerhub-0.1.1.pyz": "d840db16522fc05f051317ec67f1757eec1d26cffaf3e216bd325058bdf8203a",
+      "verificationrunner-0.2.0.pyz": "fee7cbc593352d064d786b6e56f7e2bb8f3f9e31d60587d28703b7f29c29ade0",
+      "workspaceinspector-0.1.3.pyz": "6d5a76c792b8fce48bcdf8bfd698c05bf4b60c5c9de6a72a45dffae43a2bff9f",
+      "smartdiff-0.1.1.pyz": "1c7b39f901cadd9092cae117d1ccd8cebddafb4370b734921cf17841bcc84015"
+    },
+    "execution_failure": "The checked-in active Worker Hub file raised SyntaxError: source code cannot contain null bytes when executed; the other active binary files had the same 7.5 KB truncation pattern and mismatched expected hashes.",
+    "repository_repair": "Truncated dist/active binary mirrors were removed. ACTIVE_MANIFEST.json and SHA256SUMS.txt remain as expected identity metadata; exact active binaries remain Library-first.",
+    "file_library_recovery": "Exact current active .pyz artifacts were searched by tool name, version, SHA and recent-upload navigation but were not materialized in the current chat runtime."
+  },
+  "current_distribution_contract": {
+    "github": "public documentation / expected hashes / installer / historical fallback / research evidence",
+    "chatgpt_library": "exact active generated artifacts",
+    "installer": "0.4.1-public",
+    "installer_requirement": "explicit --artifact-dir containing exact active Library artifacts"
+  },
+  "completion_gate": {
+    "sandbox_self_and_security_validation": "PASS",
+    "historical_fallback_bidirectional_validation": "PASS",
+    "current_active_hub_first": "BLOCKED_EXACT_ARTIFACT_NOT_MATERIALIZED",
+    "current_active_workspace_inspector": "BLOCKED_EXACT_ARTIFACT_NOT_MATERIALIZED",
+    "current_active_smart_diff": "BLOCKED_EXACT_ARTIFACT_NOT_MATERIALIZED",
+    "current_active_verification_runner": "BLOCKED_EXACT_ARTIFACT_NOT_MATERIALIZED",
+    "current_active_reciprocal_dogfood": "BLOCKED_EXACT_ARTIFACT_NOT_MATERIALIZED",
+    "active_release": false
+  },
+  "claim_limit": "Do not promote Sandbox Launcher v0.1.1 as the sixth ACTIVE tool until the exact current fact-confirmation core artifacts are materialized and the mandatory clean loop plus reciprocal dogfood passes against them.",
+  "next_action": "MATERIALIZE_EXACT_CURRENT_LIBRARY_CORE_THEN_RERUN_FULL_CLEAN_LOOP"
+}
