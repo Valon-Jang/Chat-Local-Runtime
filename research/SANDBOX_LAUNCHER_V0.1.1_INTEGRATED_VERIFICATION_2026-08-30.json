@@ -1,0 +1,62 @@
+{
+  "schema": "sandbox-launcher-integrated-verification/0.1",
+  "date": "2026-08-30",
+  "status": "PASS",
+  "tool": "Sandbox Launcher",
+  "version": "0.1.1",
+  "supersedes_candidate": "0.1.0",
+  "final_artifact": "SandboxLauncher-v0.1.1.pyz",
+  "final_sha256": "5e8f1b73ec0bb2628bae74e449dc624fbc744c351ce15a21aa2ff4e5c22a4d85",
+  "completion_gate": {
+    "self_test": "13/13 PASS",
+    "hub_first": "PASS",
+    "workspace_inspector": "PASS_NO_ANOMALY_TARGETED_READ_COMPLETE",
+    "smart_diff": "PASS_WITH_REVIEWED_INTENTIONAL_COMPATIBILITY_FIX",
+    "verification_runner_source": "PASS_ALL_4_GATES_RISK_NONE",
+    "verification_runner_artifact": "PASS_ALL_4_GATES_RISK_NONE",
+    "artifact_builder": "RELEASE",
+    "reciprocal_dogfood": "5/5 PASS",
+    "post_reciprocal_existing_self_tests": "5/5 PASS"
+  },
+  "defect_found_and_fixed": {
+    "candidate_version": "0.1.0",
+    "problem": "Verification Runner requires parsed machine self-test JSON to contain status=PASS. Sandbox Launcher v0.1.0 returned ok=true without status, so functionality failed despite 12/12 tests and return code 0.",
+    "fix": "v0.1.1 adds stable status PASS/FAIL alongside ok and a permanent verification-runner-self-test-status-contract regression check.",
+    "regression": "13/13 PASS"
+  },
+  "forward_validation": {
+    "local_worker_hub": {"health": "7/7 PASS", "real_plugin_invocation": "PASS", "backend": "linux_chroot_seccomp", "strong": true},
+    "workspace_inspector": {"status": "PASS", "files": 2, "confirmed_anomalies": 0, "suspected_anomalies": 0, "targeted_content": "sandbox_launcher.py OK"},
+    "smart_diff": {"status": "PASS_REVIEWED", "change_counts": {"added": 1, "removed": 0, "modified": 1, "renamed": 0}, "review": "Intentional v0.1.1 compatibility/status helper change plus new artifact only."},
+    "verification_runner": {
+      "source": {"verdict": "PASS", "gates": {"functionality": true, "safety": true, "performance": true, "compatibility": true}, "risk": "none", "next_action": "AUTO_PROMOTE"},
+      "artifact": {"verdict": "PASS", "gates": {"functionality": true, "safety": true, "performance": true, "compatibility": true}, "risk": "none", "next_action": "AUTO_PROMOTE"}
+    },
+    "artifact_builder": {"status": "RELEASE", "artifact_sha256": "5e8f1b73ec0bb2628bae74e449dc624fbc744c351ce15a21aa2ff4e5c22a4d85", "warnings": []}
+  },
+  "reciprocal_dogfood": {
+    "workerhub.pyz": "sandbox PASS; self-test 7/7 PASS",
+    "verificationrunner.pyz": "sandbox PASS; self-test 5/5 PASS",
+    "workspaceinspector.pyz": "sandbox PASS; self-test 14/14 PASS",
+    "smartdiff.pyz": "sandbox PASS; self-test 15/15 PASS",
+    "artifactbuilder.pyz": "sandbox PASS; self-test 16/16 PASS"
+  },
+  "security_behavior": {
+    "strong_default": true,
+    "backend": "linux_chroot_seccomp",
+    "layers": ["copy-in chroot", "uid/gid drop 65534", "PR_SET_NO_NEW_PRIVS", "libseccomp network/privileged syscall deny", "resource/time limits"],
+    "probes": ["host /etc/passwd hidden", "socket blocked EPERM", "host path write denied", "timeout enforced", "native ELF isolated execution", "Python .pyz isolated execution"]
+  },
+  "distribution_validation": {
+    "installer": "0.4.0-public",
+    "source_verify": "PASS all 6 tools",
+    "fresh_install": "PASS FINAL_SELF_TEST_GATE all 6 tools",
+    "fresh_verify": "PASS all 6 tools",
+    "next_action": "USE_TOOL_LAYER"
+  },
+  "artifact_source_boundary": {
+    "existing_four": "GitHub public fallback executables reconstructed and SHA-verified; not claimed byte-identical to unavailable newer Library binaries.",
+    "artifact_builder": "Exact active v0.1.1 bytes reconstructed from GitHub parts and SHA-verified.",
+    "sandbox_launcher": "Exact final v0.1.1 Artifact Builder output mirrored as base64 text and SHA-verified by installer v0.4."
+  }
+}
