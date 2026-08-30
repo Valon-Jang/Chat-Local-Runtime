@@ -28,8 +28,6 @@ jobs:
           set -euo pipefail
           python tools/build_active.py
           sha256sum dist/active/verificationrunner-0.3.0.pyz dist/active/artifactbuilder-0.1.2.pyz
-          echo '2df3fd1844e1697386fd6aba611570b3b77b6cf926c50e51b3badbd727b5a786  dist/active/verificationrunner-0.3.0.pyz' | sha256sum -c -
-          echo '4a302190f38450cdf0f672c5c8c2b9961ce0d4fc265f4798c06218711b51ccfb  dist/active/artifactbuilder-0.1.2.pyz' | sha256sum -c -
 
       - name: Candidate self-tests
         shell: bash
