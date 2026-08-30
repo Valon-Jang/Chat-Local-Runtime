@@ -21,7 +21,48 @@ A ChatGPT runtime was used to build and validate four AI-first local tools as re
 
 The executable public builds are under [`dist/`](dist/). A ChatGPT-oriented installer is under [`installers/`](installers/).
 
-> **Public-build note:** the original private scratch artifacts were not durable across runtime replacement. The files in this repository are public reference rebuilds from the recorded feature/validation checkpoint, followed by fresh public self-tests. They are not claimed to be byte-identical copies of the original scratch binaries.
+> **Public-build note:** the original private scratch artifacts were not durable across runtime replacement. The files in this repository are public reference rebuilds from the recorded feature/validation checkpoint, followed by fresh public self-tests. They are not claimed to be byte-identical copies of the original scratch binaries or of newer active artifacts recovered through ChatGPT Library.
+
+## Storage model: Library-first inside ChatGPT, GitHub as reference/fallback
+
+The project now separates **active ChatGPT artifact reuse** from **public reproducibility**.
+
+### ChatGPT Library — active artifact store
+
+For ChatGPT-to-ChatGPT reuse, the preferred path is to recover the exact generated `.pyz`, ZIP, and verification artifacts from ChatGPT Library when they are available there.
+
+Why:
+
+- shorter cross-chat recovery path inside ChatGPT
+- less need to reconstruct a program from prose or source descriptions
+- preserves the actual generated artifact instead of assuming a public rebuild is identical
+- convenient for small AI-first runtime tools whose executable shells are only tens of kilobytes
+
+### GitHub — public reference, fallback and reconstruction store
+
+This repository remains useful for:
+
+- public, inspectable documentation
+- version history and commits
+- public reference rebuilds
+- SHA-256 records
+- the repository-based ChatGPT installer
+- external recovery and reproducibility
+- benchmark and research records
+
+The important limitation is that **a file existing in GitHub does not mean it is already installed in a fresh ChatGPT runtime**. A retrieval/install step is still required. Likewise, a public rebuild in this repository is not assumed to be byte-identical to the latest active artifact in Library.
+
+The two stores therefore have different jobs:
+
+```text
+ChatGPT Library
+  -> active ChatGPT artifact reuse
+
+GitHub Chat-Local-Runtime
+  -> public reference / fallback / reconstruction / research history
+```
+
+Detailed rationale and limitations: [`research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md`](research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md)
 
 ## Install in a ChatGPT code runtime
 
@@ -148,7 +189,31 @@ Four limits should be measured separately:
 3. generated-artifact handoff limit
 4. durable storage limit
 
-## Next experiments
+## Next tool roadmap
+
+The next programs are prioritized by how much they strengthen the existing stack.
+
+1. **Artifact Builder / Release Manager**
+   - automate `source -> .pyz/ZIP -> SHA-256/manifest -> Verification Runner -> verified release package`
+   - primary goal: eliminate source/artifact drift and repeated manual packaging
+
+2. **Sandbox Launcher**
+   - provide a strong OS sandbox backend for Verification Runner
+   - primary goal: safely behavior-test native/opaque external executables instead of stopping at `BLOCKED_NEEDS_SANDBOX`
+
+3. **Local Index / Search Engine**
+   - incremental code/document/config index and relationship lookup
+   - primary goal: answer repeated workspace lookup questions without rescanning everything
+
+4. **Log / Trace Analyzer**
+   - deterministic clustering and compression of large logs/traces into failure signatures and minimal evidence
+   - primary goal: reduce model-visible log volume while improving reproducibility
+
+5. **Dependency / Impact Mapper**
+   - dependency/config/reference graph plus impacted-file and test candidates
+   - primary goal: strengthen Smart Diff impact ranking and Verification Runner test selection
+
+## Next benchmark experiments
 
 - Build real 10 MB / 50 MB / 100 MB / 200+ MB program packages.
 - Measure build success, tests, integrity, download success, external execution, build time, memory and scratch use.
@@ -164,3 +229,4 @@ This research uses capabilities exposed by the host runtime. It does not depend 
 
 - [`research/INITIAL_FINDINGS_2026-08-30.md`](research/INITIAL_FINDINGS_2026-08-30.md)
 - [`research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json`](research/PUBLIC_BUILD_VERIFICATION_2026-08-30.json)
+- [`research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md`](research/LIBRARY_FIRST_STORAGE_AND_TOOL_ROADMAP_2026-08-30.md)
