@@ -1,18 +1,31 @@
 {
   "schema": "offload-mutual-update-graph/1",
-  "controller_prefixes": [
-    "tools/mutual_update.py",
-    "tools/build_active.py",
-    ".github/workflows/feature-acceptance.yml",
-    "contracts/offload_stack_graph.json"
-  ],
   "required_peer_roles": ["hub", "inspect", "diff", "verify", "build", "sandbox"],
   "tools": {
-    "workerhub": {"version":"0.1.1","artifact":"dist/workerhub.pyz","distribution":"historical-public-fallback-for-CI; exact-active-is-Library-first","source_prefixes":["dist/workerhub.pyz","contracts/workerhub"],"roles":["hub"]},
-    "verificationrunner": {"version":"0.3.1-candidate","artifact":"dist/active/verificationrunner-0.3.1.pyz","source_prefixes":["src/verification_runner","contracts/verification_runner","contracts/pins/verification_runner"],"roles":["verify"]},
-    "workspaceinspector": {"version":"0.1.3","artifact":"dist/workspaceinspector.pyz","distribution":"historical-public-fallback-for-CI; exact-active-is-Library-first","source_prefixes":["dist/workspaceinspector.pyz","contracts/workspaceinspector"],"roles":["inspect"]},
-    "smartdiff": {"version":"0.1.1","artifact":"dist/smartdiff.pyz","distribution":"historical-public-fallback-for-CI; exact-active-is-Library-first","source_prefixes":["dist/smartdiff.pyz","contracts/smartdiff"],"roles":["diff"]},
-    "artifactbuilder": {"version":"0.1.3-candidate","artifact":"dist/active/artifactbuilder-0.1.3.pyz","source_prefixes":["src/artifact_builder","contracts/artifact_builder","contracts/pins/artifact_builder"],"roles":["build"]},
-    "sandboxlauncher": {"version":"0.1.1-candidate","artifact":"dist/sandboxlauncher.pyz.b64","source_prefixes":["dist/sandboxlauncher.pyz.b64","contracts/sandbox_launcher","research/SANDBOX_LAUNCHER"],"roles":["sandbox"]}
+    "workerhub": {
+      "version":"0.1.1","artifact":"dist/workerhub.pyz","distribution":"historical-public-fallback-for-CI; exact-active-is-Library-first","source_prefixes":["dist/workerhub.pyz","contracts/workerhub"],"roles":["hub"]
+    },
+    "verificationrunner": {
+      "version":"0.3.1-candidate","artifact":"dist/active/verificationrunner-0.3.1.pyz","source_prefixes":["src/verification_runner","contracts/verification_runner","contracts/pins/verification_runner"],"roles":["verify"],"previously_active":true,
+      "baseline_contract":"contracts/verification_runner_v0.3.1_functional.json","feature_contract":"contracts/verification_runner_v0.3.1_feature_acceptance.json","external_pin":"contracts/pins/verification_runner_v0.3.1.json"
+    },
+    "workspaceinspector": {
+      "version":"0.1.3","artifact":"dist/workspaceinspector.pyz","distribution":"historical-public-fallback-for-CI; exact-active-is-Library-first","source_prefixes":["dist/workspaceinspector.pyz","contracts/workspaceinspector"],"roles":["inspect"]
+    },
+    "smartdiff": {
+      "version":"0.1.1","artifact":"dist/smartdiff.pyz","distribution":"historical-public-fallback-for-CI; exact-active-is-Library-first","source_prefixes":["dist/smartdiff.pyz","contracts/smartdiff"],"roles":["diff"]
+    },
+    "artifactbuilder": {
+      "version":"0.1.3-candidate","artifact":"dist/active/artifactbuilder-0.1.3.pyz","source_prefixes":["src/artifact_builder","contracts/artifact_builder","contracts/pins/artifact_builder"],"roles":["build"],"previously_active":true,
+      "baseline_contract":"contracts/artifact_builder_v0.1.3_functional.json","feature_contract":"contracts/artifact_builder_v0.1.3_feature_acceptance.json","external_pin":"contracts/pins/artifact_builder_v0.1.3.json"
+    },
+    "sandboxlauncher": {
+      "version":"0.1.1-candidate","artifact":"dist/sandboxlauncher.pyz.b64","source_prefixes":["dist/sandboxlauncher.pyz.b64","contracts/sandbox_launcher","research/SANDBOX_LAUNCHER"],"roles":["sandbox"]
+    },
+    "mutualcontroller": {
+      "version":"0.1.1-candidate","artifact":"tools/mutual_update.py","product":false,"previously_active":false,
+      "source_prefixes":["tools/mutual_update.py","tools/build_active.py",".github/workflows/feature-acceptance.yml","contracts/offload_stack_graph.json","contracts/mutual_update_v1_feature_acceptance.json","contracts/pins/mutual_update_v1.json"],
+      "roles":["controller"],"feature_contract":"contracts/mutual_update_v1_feature_acceptance.json","external_pin":"contracts/pins/mutual_update_v1.json"
+    }
   }
 }
