@@ -1,0 +1,8 @@
+{
+  "schema": "offload-feature-pin/1",
+  "contract": "contracts/verification_runner_v0.3.1_feature_acceptance.json",
+  "contract_sha256": "4685a7c3758a5fd9c59a90ffee826a20cb7d042551a48403eb5037d8041216ca",
+  "preimplementation_commit": "c5683854e59e1fcd7517ac0f87caa59c82ca042c",
+  "authority": "pre-implementation contract commit",
+  "mutable_by_implementation": false
+}
