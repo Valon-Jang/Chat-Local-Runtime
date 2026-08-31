@@ -1,158 +1,237 @@
-name: feature-acceptance-gate-candidate
+name: reciprocal-feature-acceptance-v1-1
 
 on:
   pull_request:
-    paths:
-      - 'src/**'
-      - 'contracts/**'
-      - 'tools/**'
-      - 'dist/sandboxlauncher.pyz.b64'
-      - 'research/FEATURE_ACCEPTANCE_GATE_V1_2026-08-30.md'
-      - 'research/SANDBOX_LAUNCHER_V0.1.1_INTEGRATED_VERIFICATION_2026-08-30.json'
-      - '.github/workflows/feature-acceptance.yml'
   workflow_dispatch:
 
 jobs:
-  candidate-validation:
+  reciprocal-validation:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Rebuild and pin candidate artifacts
-        shell: bash
-        run: |
-          set -euo pipefail
-          python tools/build_active.py
-          echo '0d01fb6c834f117f4c2025b00764e755ec8ffa678b8fd7791df3f59dcd73aebc  dist/active/verificationrunner-0.3.0.pyz' | sha256sum -c -
-          echo 'cb86838cc7419d6d49ab9a3e29f8664af144fcdb5aa1cfad9e67b0eec94abc4d  dist/active/artifactbuilder-0.1.2.pyz' | sha256sum -c -
+      - name: Install validator backends for live adapter proof
+        run: python -m pip install -q pytest coverage ruff bandit mypy
 
-      - name: Pin pre-implementation acceptance contracts
-        shell: bash
+      - name: Build source-backed candidates
         run: |
           set -euo pipefail
-          python dist/active/verificationrunner-0.3.0.pyz contract-hash contracts/verification_runner_v0.3.0_feature_acceptance.json > /tmp/vr-contract.json
-          python dist/active/verificationrunner-0.3.0.pyz contract-hash contracts/artifact_builder_v0.1.2_feature_acceptance.json > /tmp/ab-contract.json
-          python dist/active/verificationrunner-0.3.0.pyz contract-hash contracts/sandbox_launcher_v0.1.1_feature_acceptance.json > /tmp/sb-contract.json
-          python - <<'PY'
-          import json
-          expected={
-            '/tmp/vr-contract.json':'3bc51a091145251cb25b244b8ac794d4ada8e33f692fc0035267638af1bf592e',
-            '/tmp/ab-contract.json':'0f37cc80390d99bafdadde90140bcbb9bd9f32aa7b109268380e7fd99814d3ce',
-            '/tmp/sb-contract.json':'a91ee889346303143123fe03ee10013120e094def9394bb0f513b6c80525a307',
-          }
-          for path,want in expected.items():
-              got=json.load(open(path))['contract_sha256']
-              assert got==want,(path,got,want)
-          PY
-
-      - name: Candidate self-tests
-        shell: bash
-        run: |
-          set -euo pipefail
-          python dist/active/verificationrunner-0.3.0.pyz self-test | tee /tmp/vr-self.json
-          python dist/active/artifactbuilder-0.1.2.pyz self-test | tee /tmp/ab-self.json
-          python - <<'PY'
-          import json
-          for path in ('/tmp/vr-self.json','/tmp/ab-self.json'):
-              x=json.load(open(path)); assert x['status']=='PASS', (path,x)
-          PY
-
-      - name: Verification Runner feature acceptance
-        shell: bash
-        run: |
-          set -euo pipefail
-          python dist/active/verificationrunner-0.3.0.pyz acceptance \
-            dist/active/verificationrunner-0.3.0.pyz \
-            --contract contracts/verification_runner_v0.3.0_feature_acceptance.json \
-            | tee /tmp/vr-acceptance.json
-          python dist/active/verificationrunner-0.3.0.pyz acceptance \
-            dist/active/artifactbuilder-0.1.2.pyz \
-            --contract contracts/artifact_builder_v0.1.2_feature_acceptance.json \
-            | tee /tmp/ab-acceptance.json
-          python - <<'PY'
-          import json
-          for path in ('/tmp/vr-acceptance.json','/tmp/ab-acceptance.json'):
-              x=json.load(open(path)); assert x['status']=='PASS' and x['facts_status']=='PASS', (path,x)
-              assert x['next_action']=='AI_ASSESS_INTENT', (path,x)
-          PY
-
-      - name: Artifact Builder intent-gated release
-        shell: bash
-        run: |
-          set -euo pipefail
-          python dist/active/verificationrunner-0.3.0.pyz verify \
-            dist/active/artifactbuilder-0.1.2.pyz \
-            --contract contracts/artifact_builder_v0.1.2_functional.json \
-            | tee /tmp/ab-verification.json
-          mkdir -p /tmp/release
-          python dist/active/artifactbuilder-0.1.2.pyz build src/artifact_builder \
-            --output /tmp/release \
-            --release-version 0.1.2-ci \
-            --verification-json /tmp/ab-verification.json \
-            --acceptance-contract contracts/artifact_builder_v0.1.2_feature_acceptance.json \
-            --acceptance-evidence /tmp/ab-acceptance.json \
-            --intent-assessment contracts/artifact_builder_v0.1.2_intent_assessment.json \
-            --require-feature-acceptance \
-            | tee /tmp/ab-release.json
-          python - <<'PY'
-          import json
-          x=json.load(open('/tmp/ab-release.json'))
-          assert x['status']=='RELEASE' and x['decision']=='RELEASE', x
-          assert x['feature_acceptance']['status']=='PASS', x
-          PY
-
-      - name: Sandbox Launcher retro feature acceptance
-        shell: bash
-        run: |
-          set -euo pipefail
+          python tools/build_active.py | tee /tmp/build.json
           base64 -d dist/sandboxlauncher.pyz.b64 > /tmp/sandboxlauncher.pyz
           echo '5e8f1b73ec0bb2628bae74e449dc624fbc744c351ce15a21aa2ff4e5c22a4d85  /tmp/sandboxlauncher.pyz' | sha256sum -c -
-          sudo -E python dist/active/verificationrunner-0.3.0.pyz acceptance \
-            /tmp/sandboxlauncher.pyz \
-            --contract contracts/sandbox_launcher_v0.1.1_feature_acceptance.json \
-            | tee /tmp/sandbox-acceptance.json
-          python - <<'PY'
-          import json
-          x=json.load(open('/tmp/sandbox-acceptance.json'))
-          assert x['status']=='PASS' and x['facts_status']=='PASS', x
-          required={r['id']:r['status'] for r in x['requirements']}
-          assert all(required[k]=='PASS' for k in ('SB-R1','SB-R2','SB-R3','SB-R4')), x
-          PY
 
-      - name: Historical Hub contract smoke test
-        shell: bash
+      - name: Independently verify pre-implementation pins
         run: |
           set -euo pipefail
-          cp dist/active/verificationrunner-0.3.0.pyz /tmp/verificationrunner.pyz
-          printf '%s' '{"operation":"plugin","plugin":"/tmp/verificationrunner.pyz","request":{"operation":"capabilities"},"timeout":60}' \
-            | python dist/workerhub.pyz request - | tee /tmp/hub-vr.json
           python - <<'PY'
-          import json
-          x=json.load(open('/tmp/hub-vr.json'))
-          assert x.get('status') in ('SUCCESS','PASS'), x
-          r=x.get('result',x)
-          assert isinstance(r,dict), x
+          import hashlib,json,subprocess
+          from pathlib import Path
+          pins=[
+            'contracts/pins/mutual_update_v1.json',
+            'contracts/pins/verification_runner_v0.3.1.json',
+            'contracts/pins/artifact_builder_v0.1.3.json',
+          ]
+          def canon(d):
+              d=json.loads(json.dumps(d)); d.pop('locked_sha256',None)
+              return hashlib.sha256(json.dumps(d,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+          for pp in pins:
+              p=json.load(open(pp)); cp=p['contract']; c=json.load(open(cp)); got=canon(c)
+              assert c.get('locked_sha256')==got,(cp,'lock',c.get('locked_sha256'),got)
+              assert p['contract_sha256']==got,(pp,'pin',p['contract_sha256'],got)
+              raw=subprocess.check_output(['git','show',f"{p['preimplementation_commit']}:{cp}"],text=True)
+              old=json.loads(raw); assert canon(old)==got,(pp,'preimplementation-drift',canon(old),got)
+          print('PIN_CHECK_PASS')
           PY
 
-      - name: Reciprocal Artifact Builder dogfood
-        shell: bash
+      - name: Self-test every available peer artifact
         run: |
           set -euo pipefail
-          mkdir -p /tmp/dogfood
-          for p in dist/workerhub.pyz dist/verificationrunner.pyz dist/workspaceinspector.pyz dist/smartdiff.pyz; do
-            n=$(basename "$p" .pyz)
-            mkdir -p "/tmp/dogfood/$n"
-            cp "$p" "/tmp/dogfood/$n/$n.pyz"
-            python dist/active/artifactbuilder-0.1.2.pyz build "/tmp/dogfood/$n" --output "/tmp/dogfood/out-$n" --release-version dogfood > "/tmp/dogfood/$n.json"
+          python dist/workerhub.pyz self-test | tee /tmp/workerhub-self.json
+          python dist/workspaceinspector.pyz self-test | tee /tmp/inspector-self.json
+          python dist/smartdiff.pyz self-test | tee /tmp/smartdiff-self.json
+          python dist/active/verificationrunner-0.3.1.pyz self-test | tee /tmp/vr-self.json
+          python dist/active/artifactbuilder-0.1.3.pyz self-test | tee /tmp/ab-self.json
+          sudo -E python /tmp/sandboxlauncher.pyz self-test | tee /tmp/sandbox-self.json
+          python tools/mutual_update.py self-test | tee /tmp/mutual-self.json
+          python - <<'PY'
+          import json
+          for p in ['/tmp/workerhub-self.json','/tmp/inspector-self.json','/tmp/smartdiff-self.json','/tmp/vr-self.json','/tmp/ab-self.json','/tmp/sandbox-self.json','/tmp/mutual-self.json']:
+              x=json.load(open(p)); assert x.get('status')=='PASS',(p,x)
+          PY
+
+      - name: Probe peer capabilities and help contracts
+        run: |
+          set -euo pipefail
+          for p in dist/workerhub.pyz dist/workspaceinspector.pyz dist/smartdiff.pyz dist/active/verificationrunner-0.3.1.pyz dist/active/artifactbuilder-0.1.3.pyz /tmp/sandboxlauncher.pyz; do
+            n=$(basename "$p")
+            python "$p" capabilities > "/tmp/$n.capabilities.json" || true
+            python "$p" --help > "/tmp/$n.help.txt" 2>&1 || true
+            cat "/tmp/$n.capabilities.json" || true
+            cat "/tmp/$n.help.txt" || true
           done
-          mkdir -p /tmp/dogfood/sandbox
-          cp /tmp/sandboxlauncher.pyz /tmp/dogfood/sandbox/sandboxlauncher.pyz
-          python dist/active/artifactbuilder-0.1.2.pyz build /tmp/dogfood/sandbox --output /tmp/dogfood/out-sandbox --release-version dogfood > /tmp/dogfood/sandbox.json
+
+      - name: Generic change detection and reciprocal plan
+        run: |
+          set -euo pipefail
+          BASE_SHA='${{ github.event.pull_request.base.sha }}'
+          if [ -z "$BASE_SHA" ]; then BASE_SHA=$(git rev-parse HEAD^); fi
+          git diff --name-only "$BASE_SHA" HEAD > /tmp/changed.txt
+          mapfile -t CHANGED < /tmp/changed.txt
+          python tools/mutual_update.py plan --graph contracts/offload_stack_graph.json --changed "${CHANGED[@]}" | tee /tmp/mutual-plan.json
           python - <<'PY'
-          import json,glob
-          for p in glob.glob('/tmp/dogfood/*.json'):
-              x=json.load(open(p)); assert x['decision'] in ('RELEASE','RELEASE_WITH_WARNINGS'), (p,x)
+          import json
+          x=json.load(open('/tmp/mutual-plan.json')); assert x['status']=='PASS',x
+          assert not x['changed']['unregistered_executable_changes'],x
           PY
+
+      - name: Baseline preservation verification
+        run: |
+          set -euo pipefail
+          VR=dist/active/verificationrunner-0.3.1.pyz
+          AB=dist/active/artifactbuilder-0.1.3.pyz
+          python "$VR" verify "$VR" --functional-contract contracts/verification_runner_v0.3.1_functional.json | tee /tmp/vr-technical.json
+          python "$VR" verify "$AB" --functional-contract contracts/artifact_builder_v0.1.3_functional.json | tee /tmp/ab-technical.json
+          python - <<'PY'
+          import json
+          for p in ('/tmp/vr-technical.json','/tmp/ab-technical.json'):
+              x=json.load(open(p)); assert x['facts']['functionality']['status']=='PASS',(p,x)
+              assert not x['regression']['newly_failing'],(p,x)
+          PY
+
+      - name: Live validator and regression proof
+        run: |
+          set -euo pipefail
+          VR=dist/active/verificationrunner-0.3.1.pyz
+          mkdir -p /tmp/validator-fixture
+          cat > /tmp/validator-fixture/calc.py <<'PY'
+          def add(a: int, b: int) -> int:
+              return a + b
+          PY
+          cat > /tmp/validator-fixture/test_calc.py <<'PY'
+          from calc import add
+
+          def test_add() -> None:
+              assert add(1, 2) == 3
+          PY
+          python "$VR" verify "$VR" --functional-contract contracts/verification_runner_v0.3.1_functional.json --validator-root /tmp/validator-fixture | tee /tmp/validator-pass.json
+          python - <<'PY'
+          p='/tmp/validator-fixture/test_calc.py'
+          s=open(p).read().replace('== 3','== 4')
+          open(p,'w').write(s)
+          PY
+          set +e
+          python "$VR" verify "$VR" --functional-contract contracts/verification_runner_v0.3.1_functional.json --validator-root /tmp/validator-fixture --previous-result /tmp/validator-pass.json | tee /tmp/validator-regression.json
+          RC=${PIPESTATUS[0]}
+          set -e
+          test "$RC" -ne 0
+          python - <<'PY'
+          import json
+          a=json.load(open('/tmp/validator-pass.json')); b=json.load(open('/tmp/validator-regression.json'))
+          for n in ('ruff','bandit','mypy','pytest','coverage'):
+              assert a['facts']['validators']['available'][n] is True,(n,a)
+          assert a['facts']['validators']['results']['pytest']['status']=='PASS',a
+          assert b['facts']['validators']['results']['pytest']['status']=='FAIL',b
+          assert 'validator:pytest' in b['regression']['newly_failing'],b
+          PY
+
+      - name: Feature acceptance facts with external pins
+        run: |
+          set -euo pipefail
+          VR=dist/active/verificationrunner-0.3.1.pyz
+          AB=dist/active/artifactbuilder-0.1.3.pyz
+          python "$VR" acceptance "$VR" --contract contracts/verification_runner_v0.3.1_feature_acceptance.json --external-pin contracts/pins/verification_runner_v0.3.1.json | tee /tmp/vr-acceptance.json
+          python "$VR" acceptance "$AB" --contract contracts/artifact_builder_v0.1.3_feature_acceptance.json --external-pin contracts/pins/artifact_builder_v0.1.3.json | tee /tmp/ab-acceptance.json
+          python "$VR" acceptance tools/mutual_update.py --contract contracts/mutual_update_v1_feature_acceptance.json --external-pin contracts/pins/mutual_update_v1.json | tee /tmp/mutual-acceptance.json
+          python - <<'PY'
+          import json
+          for p in ('/tmp/vr-acceptance.json','/tmp/ab-acceptance.json','/tmp/mutual-acceptance.json'):
+              x=json.load(open(p)); assert x['status']=='PASS' and x['facts_status']=='PASS',(p,x)
+              assert x['target_sha256'],(p,x)
+              assert x['external_pin']['status']=='PASS',(p,x)
+              assert x['next_action']=='AI_ASSESS_INTENT',(p,x)
+          PY
+
+      - name: Verification Runner reciprocally verifies every peer
+        run: |
+          set -euo pipefail
+          VR=dist/active/verificationrunner-0.3.1.pyz
+          mkdir -p /tmp/peer-contracts
+          python - <<'PY'
+          import json, pathlib
+          peers={
+            'workerhub':'dist/workerhub.pyz',
+            'workspaceinspector':'dist/workspaceinspector.pyz',
+            'smartdiff':'dist/smartdiff.pyz',
+            'artifactbuilder':'dist/active/artifactbuilder-0.1.3.pyz',
+            'sandboxlauncher':'/tmp/sandboxlauncher.pyz',
+          }
+          for n,p in peers.items():
+              c={'schema':'offload-functional-contract/1','cases':[
+                {'id':'capabilities','args':['capabilities'],'expect':{'returncode_in':[0],'stdout_json_subset':{'status':'PASS'}}},
+                {'id':'self-test','args':['self-test'],'timeout_seconds':180,'expect':{'returncode_in':[0],'stdout_json_subset':{'status':'PASS'}}},
+              ]}
+              pathlib.Path(f'/tmp/peer-contracts/{n}.json').write_text(json.dumps(c))
+          PY
+          for item in 'workerhub dist/workerhub.pyz' 'workspaceinspector dist/workspaceinspector.pyz' 'smartdiff dist/smartdiff.pyz' 'artifactbuilder dist/active/artifactbuilder-0.1.3.pyz'; do
+            set -- $item; n=$1; p=$2
+            python "$VR" verify "$p" --functional-contract "/tmp/peer-contracts/$n.json" > "/tmp/vr-peer-$n.json"
+          done
+          sudo -E python "$VR" verify /tmp/sandboxlauncher.pyz --functional-contract /tmp/peer-contracts/sandboxlauncher.json > /tmp/vr-peer-sandboxlauncher.json
+          python - <<'PY'
+          import glob,json
+          for p in glob.glob('/tmp/vr-peer-*.json'):
+              x=json.load(open(p)); assert x['facts']['functionality']['status']=='PASS',(p,x)
+          PY
+
+      - name: Worker Hub invokes every peer machine contract
+        run: |
+          set -euo pipefail
+          for item in 'verificationrunner dist/active/verificationrunner-0.3.1.pyz' 'workspaceinspector dist/workspaceinspector.pyz' 'smartdiff dist/smartdiff.pyz' 'artifactbuilder dist/active/artifactbuilder-0.1.3.pyz' 'sandboxlauncher /tmp/sandboxlauncher.pyz'; do
+            set -- $item; n=$1; p=$2
+            printf '%s' "{\"operation\":\"plugin\",\"plugin\":\"$p\",\"request\":{\"operation\":\"capabilities\"},\"timeout\":60}" | python dist/workerhub.pyz request - > "/tmp/hub-$n.json"
+          done
+          python - <<'PY'
+          import glob,json
+          for p in glob.glob('/tmp/hub-*.json'):
+              x=json.load(open(p)); assert x.get('status') in ('SUCCESS','PASS'),(p,x)
+          PY
+
+      - name: Artifact Builder reciprocally packages every peer
+        run: |
+          set -euo pipefail
+          AB=dist/active/artifactbuilder-0.1.3.pyz
+          mkdir -p /tmp/dogfood
+          for p in dist/workerhub.pyz dist/active/verificationrunner-0.3.1.pyz dist/workspaceinspector.pyz dist/smartdiff.pyz /tmp/sandboxlauncher.pyz; do
+            n=$(basename "$p" .pyz); mkdir -p "/tmp/dogfood/$n"; cp "$p" "/tmp/dogfood/$n/$n.pyz"
+            python "$AB" build "/tmp/dogfood/$n" --output "/tmp/dogfood/out-$n" --release-version reciprocal > "/tmp/dogfood/$n.json"
+          done
+          python - <<'PY'
+          import glob,json
+          for p in glob.glob('/tmp/dogfood/*.json'):
+              x=json.load(open(p)); assert x['decision'] in ('RELEASE','RELEASE_WITH_WARNINGS'),(p,x)
+              assert not x['source_mutation'],(p,x)
+          PY
+
+      - name: Upload candidate artifacts and deterministic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: reciprocal-validation-evidence
+          path: |
+            dist/active/verificationrunner-0.3.1.pyz
+            dist/active/artifactbuilder-0.1.3.pyz
+            /tmp/build.json
+            /tmp/vr-technical.json
+            /tmp/ab-technical.json
+            /tmp/validator-pass.json
+            /tmp/validator-regression.json
+            /tmp/vr-acceptance.json
+            /tmp/ab-acceptance.json
+            /tmp/mutual-acceptance.json
+            /tmp/mutual-plan.json
+            /tmp/*.capabilities.json
+            /tmp/*.help.txt
