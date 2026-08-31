@@ -1,0 +1,8 @@
+{
+  "schema": "offload-feature-pin/1",
+  "contract": "contracts/mutual_update_v1_feature_acceptance.json",
+  "contract_sha256": "6d11c515f7f0eb31fa667126e71df50e00ab4ebb6c372d250edafdb78fe4797d",
+  "preimplementation_commit": "aab17f22842a6f0dbadf9519b6e87f46989132b8",
+  "authority": "pre-implementation contract commit",
+  "mutable_by_implementation": false
+}
