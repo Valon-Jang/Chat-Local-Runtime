@@ -1,0 +1,31 @@
+{
+  "schema": "offload-feature-acceptance/1",
+  "contract_id": "mutual-update-loop-v1-feature-acceptance",
+  "target_id": "tools/mutual_update.py",
+  "purpose": "When any offload tool changes, make the other applicable tools deterministically inspect, compare, verify, sandbox, rebuild, and refresh that tool and then reciprocally process the peer stack; only after the whole peer graph passes may generated artifacts and stack metadata be promoted, while AI retains intent judgment.",
+  "requirements": [
+    {"id":"MU-R1","type":"MUST_WORK","statement":"A changed tool is checked by every applicable peer role and the candidate reciprocally processes every applicable peer before stack promotion.","evidence":["MU-S1"]},
+    {"id":"MU-R2","type":"MUST_WORK","statement":"Previous active capabilities are preserved: baseline functional contracts must pass in addition to delta feature acceptance.","evidence":["MU-S2"]},
+    {"id":"MU-R3","type":"MUST_WORK","statement":"Verification, acceptance evidence, intent assessment, and release are bound to the exact candidate artifact SHA-256.","evidence":["MU-S3"]},
+    {"id":"MU-R4","type":"MUST_NOT","statement":"Feature acceptance contracts without a mandatory locked_sha256 and an external pre-implementation pin must not be promotable.","evidence":["MU-S4"]},
+    {"id":"MU-R5","type":"MUST_NOT","statement":"Opaque/native executable scenarios must not execute directly on the host when strong sandbox evidence is required; they must be sandboxed or BLOCKED.","evidence":["MU-S5"]},
+    {"id":"MU-R6","type":"MUST_NOT","statement":"Peer update automation must not mutate peer source code or partially promote stack metadata; updates are limited to generated artifacts/evidence/metadata and are committed atomically after all required gates pass.","evidence":["MU-S6"]},
+    {"id":"MU-R7","type":"MUST_WORK","statement":"Any peer failure, missing required artifact, contract drift, or inconclusive mandatory gate prevents promotion and leaves the prior active state authoritative.","evidence":["MU-S7"]},
+    {"id":"MU-R8","type":"MUST_WORK","statement":"Executable changes are generically detected and require a feature-acceptance contract rather than relying on hard-coded tool names.","evidence":["MU-S8"]},
+    {"id":"MU-R9","type":"MUST_WORK","statement":"Machine output uses PASS, FAIL, BLOCKED, and INCONCLUSIVE without converting unavailable verification into PASS.","evidence":["MU-S9"]},
+    {"id":"MU-R10","type":"MUST_NOT","statement":"Programs return deterministic facts and update mechanics only; they do not decide whether user intent is satisfied.","evidence":["MU-S10"]}
+  ],
+  "scenarios": [
+    {"id":"MU-S1","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"reciprocal_peer_graph":true}}}},
+    {"id":"MU-S2","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"baseline_preservation":true}}}},
+    {"id":"MU-S3","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"exact_artifact_binding":true}}}},
+    {"id":"MU-S4","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"mandatory_external_lock":true}}}},
+    {"id":"MU-S5","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"native_sandbox_gate":true}}}},
+    {"id":"MU-S6","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"no_source_mutation":true,"atomic_promotion":true}}}},
+    {"id":"MU-S7","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"fail_closed":true}}}},
+    {"id":"MU-S8","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"generic_change_detection":true}}}},
+    {"id":"MU-S9","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","checks":{"status_semantics":true}}}},
+    {"id":"MU-S10","args":["capabilities"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","facts_only":true,"ai_intent_judgment_external":true}}}
+  ],
+  "locked_sha256": "6d11c515f7f0eb31fa667126e71df50e00ab4ebb6c372d250edafdb78fe4797d"
+}
