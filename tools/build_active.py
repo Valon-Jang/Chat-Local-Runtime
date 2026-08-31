@@ -6,10 +6,17 @@ DT=(2026,1,1,0,0,0)
 
 def build(srcdir:Path,out:Path,module_files):
     out.parent.mkdir(parents=True,exist_ok=True)
+    payload=[]
+    for arc,src in module_files:
+        path=srcdir/src
+        data=path.read_bytes()
+        if path.suffix=='.py':
+            compile(data.decode('utf-8'),str(path),'exec')
+        payload.append((arc,data))
     with zipfile.ZipFile(out,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
-        for arc,src in module_files:
+        for arc,data in payload:
             zi=zipfile.ZipInfo(arc,DT); zi.compress_type=zipfile.ZIP_DEFLATED; zi.external_attr=(0o644&0xffff)<<16
-            z.writestr(zi,(srcdir/src).read_bytes())
+            z.writestr(zi,data)
     return hashlib.sha256(out.read_bytes()).hexdigest()
 
 def main():
