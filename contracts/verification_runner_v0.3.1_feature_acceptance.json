@@ -1,0 +1,19 @@
+{
+  "schema": "offload-feature-acceptance/1",
+  "contract_id": "verification-runner-0.3.1-feature-acceptance",
+  "target_id": "verificationrunner.pyz",
+  "purpose": "Preserve the active fact-confirmation behavior while hardening feature acceptance so contracts are externally pinned, exact artifact identity is bound, native/opaque execution fails closed, real installed validators can run on source roots, and new regressions are surfaced without replacing AI intent judgment.",
+  "requirements": [
+    {"id":"VR31-R1","type":"MUST_WORK","statement":"No functional contract remains INCONCLUSIVE, while explicit functional contracts execute deterministic scenarios.","evidence":["VR31-S1"]},
+    {"id":"VR31-R2","type":"MUST_WORK","statement":"Installed ruff, bandit, mypy, pytest, and coverage are discovered and can be executed on source roots without auto-installing missing validators.","evidence":["VR31-S2"]},
+    {"id":"VR31-R3","type":"MUST_WORK","statement":"Previous verification results can be compared and newly failing facts are returned as regressions.","evidence":["VR31-S2"]},
+    {"id":"VR31-R4","type":"MUST_WORK","statement":"Acceptance requires both locked_sha256 and an external pre-implementation pin and returns exact target_sha256 facts.","evidence":["VR31-S1","VR31-S2"]},
+    {"id":"VR31-R5","type":"MUST_NOT","statement":"Native or opaque targets must not execute directly on the host and are BLOCKED_NEEDS_SANDBOX.","evidence":["VR31-S2"]},
+    {"id":"VR31-R6","type":"MUST_NOT","statement":"The runner never decides user intent; acceptance output remains facts-only and hands off to AI intent assessment.","evidence":["VR31-S1"]}
+  ],
+  "scenarios": [
+    {"id":"VR31-S1","args":["capabilities"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","version":"0.3.1","regression_comparison":true,"feature_acceptance":{"facts_only":true,"ai_intent_judgment_external":true,"mandatory_locked_sha256":true,"external_pin_required":true,"exact_target_sha256":true},"native_execution":"BLOCKED_NEEDS_SANDBOX"}}},
+    {"id":"VR31-S2","args":["self-test"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","passed":12,"total":12}}}
+  ],
+  "locked_sha256": "4685a7c3758a5fd9c59a90ffee826a20cb7d042551a48403eb5037d8041216ca"
+}

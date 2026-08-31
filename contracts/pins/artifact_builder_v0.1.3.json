@@ -1,0 +1,8 @@
+{
+  "schema": "offload-feature-pin/1",
+  "contract": "contracts/artifact_builder_v0.1.3_feature_acceptance.json",
+  "contract_sha256": "04a4b435d01925f6c7f02f4f65c03c4ba1b02c04a89e8f1c10523b64e8e51cc9",
+  "preimplementation_commit": "2675f8a02c5325ab398f9d5b3910936abb157901",
+  "authority": "pre-implementation contract commit",
+  "mutable_by_implementation": false
+}

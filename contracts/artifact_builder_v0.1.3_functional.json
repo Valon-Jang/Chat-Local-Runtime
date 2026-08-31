@@ -1,0 +1,8 @@
+{
+  "schema": "offload-functional-contract/1",
+  "cases": [
+    {"id":"capabilities","args":["capabilities"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","version":"0.1.3","ai_contract_version":"offload-ai/1","exact_artifact_binding":true,"external_pin_required":true}}},
+    {"id":"self-test","args":["self-test"],"timeout_seconds":180,"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","passed":12,"total":12}}},
+    {"id":"inspect","precreate":[{"path":"src/__main__.py","content":"print('fixture')\n"}],"args":["inspect","{workdir}/src"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","mode":"pyz","files":1}}}
+  ]
+}

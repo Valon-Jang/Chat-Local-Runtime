@@ -1,0 +1,9 @@
+{
+  "schema": "offload-functional-contract/1",
+  "cases": [
+    {"id":"capabilities","args":["capabilities"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","version":"0.3.1","ai_contract_version":"offload-ai/1","regression_comparison":true}}},
+    {"id":"self-test","args":["self-test"],"timeout_seconds":180,"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"PASS","passed":12,"total":12}}},
+    {"id":"no-contract-inconclusive","precreate":[{"path":"fixture.py","content":"print('fixture')\n"}],"args":["verify","{workdir}/fixture.py"],"expect":{"returncode_in":[0],"stdout_json_subset":{"status":"INCONCLUSIVE","verdict":"INCONCLUSIVE","facts":{"functionality":{"status":"INCONCLUSIVE","reason":"NO_FUNCTIONAL_CONTRACT"}}}}},
+    {"id":"native-fails-closed","precreate":[{"path":"native.bin","content":"opaque fixture"}],"args":["verify","{workdir}/native.bin"],"expect":{"returncode_in":[1],"stdout_json_subset":{"status":"BLOCKED","verdict":"BLOCKED","reason":"BLOCKED_NEEDS_SANDBOX"}}}
+  ]
+}
