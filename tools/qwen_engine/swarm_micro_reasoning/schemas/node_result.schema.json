@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SwarmNodeResult",
+  "type": "object",
+  "required": ["ok", "engine", "version", "awareness", "outgoing_messages"],
+  "properties": {
+    "ok": {"type": "boolean"},
+    "engine": {"type": "string"},
+    "version": {"type": "string"},
+    "awareness": {"type": "object"},
+    "local_evidence_count": {"type": "integer"},
+    "source_backed_evidence_count": {"type": "integer"},
+    "outgoing_messages": {"type": "array"},
+    "final_packet": {"type": ["object", "null"]}
+  }
+}
