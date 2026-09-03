@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Swarm Micro-Reasoning Mesh Result",
+  "type": "object",
+  "required": ["ok", "engine", "version", "topology", "final_packet", "metrics"],
+  "properties": {
+    "ok": {"type": "boolean"},
+    "engine": {"const": "swarm_micro_reasoning_mesh"},
+    "version": {"type": "string"},
+    "topology": {
+      "type": "object",
+      "required": ["name", "node_count", "readout_node", "neighbors", "topology_awareness"]
+    },
+    "final_packet": {
+      "type": "object",
+      "required": ["packet_type", "task", "topology", "readout_node", "risk_level", "auto_execute_allowed", "evidence_items", "conflicts", "unknowns", "recommended_next_action", "metrics"],
+      "properties": {
+        "packet_type": {"const": "chatgpt_evidence_packet"},
+        "risk_level": {"enum": ["read_only", "file_write", "external_side_effect", "unknown"]},
+        "auto_execute_allowed": {"type": "boolean"},
+        "evidence_items": {"type": "array"},
+        "conflicts": {"type": "array"},
+        "unknowns": {"type": "array"}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["node_count", "message_count", "source_backed_evidence_count", "hallucinated_source_ref", "side_effect_violation"]
+    }
+  }
+}
