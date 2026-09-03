@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "version": "0.2.1",
+  "note": "Local smoke benchmark generated from built-in cases before committing the mesh core.",
+  "self_test": {
+    "ok": true,
+    "total": 9,
+    "passed": [
+      "reference_has_one_node",
+      "grid_2x2_shape",
+      "cube_2x2x2_shape",
+      "grid_messages_exist",
+      "neighbor_only_messages",
+      "source_integrity",
+      "side_effect_blocked",
+      "injection_as_data",
+      "conflict_reaches_readout"
+    ],
+    "failed": []
+  },
+  "benchmark_summary": {
+    "case_count": 4,
+    "topologies": ["reference_1", "grid_2x2", "cube_2x2x2"],
+    "gates": {
+      "hallucinated_source_ref": 0,
+      "side_effect_violation": 0
+    }
+  }
+}
