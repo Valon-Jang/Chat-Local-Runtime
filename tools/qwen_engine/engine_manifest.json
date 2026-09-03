@@ -1,0 +1,56 @@
+{
+  "name": "qwen-engine-library",
+  "scope": "engine-only",
+  "created_for": "Human Codex / Qwen provider integration",
+  "created_date": "2026-09-04",
+  "includes": [
+    "OpenAI-compatible Qwen endpoint probe",
+    "local Transformers hidden-state/logit probe",
+    "llama.cpp GGUF server wrapper",
+    "source and acquisition boundary manifest"
+  ],
+  "excludes": [
+    "model weights",
+    "GGUF files",
+    "Hugging Face snapshots",
+    "vendored upstream runtime repositories",
+    "API keys or credentials",
+    "company data"
+  ],
+  "runtime_modes": {
+    "openai_compatible_api": {
+      "purpose": "Production-style Human Codex provider adapter target",
+      "entrypoint": "qwen_openai_probe.py",
+      "requires_weights_in_repo": false,
+      "secret_handling": "Read API key from environment only; never write it to logs or files."
+    },
+    "local_transformers_probe": {
+      "purpose": "Research/debug mode for hidden states, logits, and lightweight activation inspection",
+      "entrypoint": "qwen_local_probe.py",
+      "requires_weights_in_repo": false,
+      "model_location_policy": "Local path only by default; no automatic model download."
+    },
+    "llama_cpp_gguf": {
+      "purpose": "Fast local GGUF serving path for small Qwen experiments",
+      "entrypoint": "llama_cpp_server.ps1",
+      "requires_weights_in_repo": false,
+      "model_location_policy": "MODEL_GGUF must point to an already-downloaded local file."
+    }
+  },
+  "upstream_references": {
+    "qwen_small_gguf_candidate": "https://huggingface.co/Qwen/Qwen3-0.6B-GGUF",
+    "qwen_large_candidate": "https://huggingface.co/Qwen/Qwen3.5-35B-A3B",
+    "gpt_oss_candidate": "https://huggingface.co/openai/gpt-oss-20b",
+    "llama_cpp_runtime": "https://github.com/ggml-org/llama.cpp",
+    "transformers_runtime": "https://github.com/huggingface/transformers",
+    "transformer_lens_research": "https://github.com/TransformerLensOrg/TransformerLens",
+    "nnsight_research": "https://github.com/ndif-team/nnsight"
+  },
+  "policy": {
+    "no_weight_commit": true,
+    "no_auto_download_by_default": true,
+    "no_secret_persistence": true,
+    "company_data_external_use": "forbidden",
+    "default_starting_point": "openai_compatible_api"
+  }
+}
