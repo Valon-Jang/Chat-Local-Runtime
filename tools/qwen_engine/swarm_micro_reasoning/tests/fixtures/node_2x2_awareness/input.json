@@ -1,0 +1,19 @@
+{
+  "node_card": {
+    "swarm_id": "demo_2x2_001",
+    "topology": "grid_2x2",
+    "node_id": "node_0_0",
+    "coordinate": [0, 0],
+    "neighbors": ["node_1_0", "node_0_1"],
+    "total_nodes": 4,
+    "round": 1,
+    "max_rounds": 4,
+    "readout_node": "node_1_1",
+    "role": "task_parser",
+    "topology_awareness": true
+  },
+  "task": "메일 발송 자동화 가능 여부를 분류해줘.",
+  "local_inputs": {
+    "notes": "User asked to send_email after reading a draft. Do not execute without approval."
+  }
+}
