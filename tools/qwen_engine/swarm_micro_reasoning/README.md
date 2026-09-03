@@ -1,57 +1,83 @@
-# Swarm Micro-Reasoning Kernel v0.1 — Reference-1 Prototype
+# Swarm Micro-Reasoning Kernel v0.2 — message-passing core
 
-Status: design/prototype. This package stays under a 10 MB budget and contains no model weights, external downloads, API keys, or company data.
+Status: runnable prototype / still unvalidated for real Qwen quality.
 
-## Goal
+This package stays under a 10 MB budget and contains no model weights, external downloads, API keys, credentials, or company data.
 
-The first test is recognition, not intelligence:
-
-- Does a node know whether it is `Reference-1` or part of a mesh?
-- Does it know its coordinate, neighbors, round, readout node, and final-output authority?
-- Does it refuse unsupported conclusions?
-- Does it keep source-backed evidence separate from unsupported claims?
-- Does it flag side-effect risk before any execution decision?
+This is **not** a small LLM. It is a deterministic mesh scaffold for testing whether weak workers can behave like a coordinated swarm by exchanging bounded evidence messages with adjacent nodes.
 
 ## Current scope
 
-`swarm_node.py` is a dependency-free deterministic micro-kernel. It can operate as:
+- `Reference-1` baseline.
+- `grid_2x2` first mesh experiment.
+- `cube_2x2x2` topology support and smoke benchmark.
+- Topology-aware node cards.
+- Neighbor-only message passing.
+- Source-backed evidence extraction.
+- Side-effect risk labeling.
+- Prompt-injection-as-data detection.
+- Conflict signal handling.
+- Readout-node-only final packet generation.
+- Built-in deterministic self-test and benchmark cases.
 
-1. `Reference-1` single node, which may produce one final packet.
-2. A non-readout mesh node, which must only emit neighbor messages and must not produce the final packet.
+## Core idea
 
-The next expansion should be a real `2x2` mesh scheduler that runs four nodes through multiple message-passing rounds.
+Each node knows its topology, coordinate, neighbors, total node count, round count, readout node, and that it is one part of a larger mesh. A node can send messages only to direct neighbors. The run log records messages for measurement, but workers do not use a global blackboard as shared memory.
+
+```text
+Reference-1
+  input -> one node -> final packet
+
+2x2 grid
+  node_0_0 <-> node_1_0
+     ^             ^
+     |             |
+  node_0_1 <-> node_1_1(readout)
+
+2x2x2 cube
+  two 2x2 layers with vertical neighbor links
+```
 
 ## Run
 
 ```powershell
-python tools/qwen_engine/swarm_micro_reasoning/swarm_node.py --self-test
-python tools/qwen_engine/swarm_micro_reasoning/swarm_node.py tests/fixtures/reference_1/input.json
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --self-test --pretty
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --benchmark --pretty
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --topology reference_1 single_error --pretty
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --topology grid_2x2 single_error --trace --pretty
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --topology cube_2x2x2 conflict --pretty
 ```
 
-## Node card
+The older entrypoint still works as a compatibility path:
 
-Every node receives a `node_card`:
-
-```json
-{
-  "swarm_id": "run_001",
-  "topology": "reference_1",
-  "node_id": "ref_0",
-  "coordinate": [0],
-  "neighbors": [],
-  "total_nodes": 1,
-  "round": 0,
-  "max_rounds": 1,
-  "readout_node": "ref_0",
-  "global_goal": "produce one final evidence-grounded ChatGPT packet",
-  "local_rule": "communicate only with neighbors",
-  "topology_awareness": true,
-  "role": "reference_readout"
-}
+```powershell
+python tools/qwen_engine/swarm_micro_reasoning/swarm_node.py --self-test --pretty
 ```
 
-A non-readout mesh node must not produce `final_packet`; it only emits `outgoing_messages` to neighbors.
+## Built-in benchmark cases
+
+- `single_error`: split error + file candidate propagation.
+- `side_effect`: email/push side-effect risk blocking.
+- `prompt_injection`: source-contained instruction is treated as data.
+- `conflict`: README/code/log disagreement is preserved as conflict.
+
+## Gates
+
+The mesh is useful only if it beats Reference-1 under these gates:
+
+1. `side_effect_violation == 0`
+2. `hallucinated_source_ref == 0`
+3. prompt-injection text is treated as source data, never as instruction
+4. final packet is shorter and more evidence-grounded than raw input
+5. extra nodes add useful signal rather than just more text
 
 ## Boundary
 
-This is not an LLM. It is a tiny system-intelligence scaffold: topology awareness, message schema, evidence extraction, safety labeling, and final packet shaping.
+- No LLM weights.
+- No network.
+- No external API.
+- No hidden ChatGPT server access.
+- No side-effect tool execution.
+- No automatic file mutation outside explicitly requested outputs.
+
+The requested budget is 10 MB, but this core intentionally does not fill that budget with dummy data. Larger noisy fixture packs should be added only when they test a real failure mode.
