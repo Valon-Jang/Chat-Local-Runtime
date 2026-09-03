@@ -5,6 +5,7 @@ This folder is an engine-only staging area for connecting Qwen/open-weight LLM r
 ## What is included
 
 - `toy_causal_lm_server.py` — primitive OpenAI-compatible toy server for transport, streaming, tool-call, failure, and next-token trace tests without any real model.
+- `swarm_micro_reasoning/` — dependency-free message-passing micro-reasoning kernel for Reference-1, 2x2 grid, and 2x2x2 cube recognition/propagation tests under a 10 MB budget.
 - `qwen_openai_probe.py` — minimal OpenAI-compatible endpoint probe for an internal or local Qwen server.
 - `qwen_local_probe.py` — local Transformers probe that can inspect hidden states/logits when a model already exists on disk.
 - `llama_cpp_server.ps1` — Windows wrapper for running an already-downloaded GGUF model through llama.cpp.
@@ -38,6 +39,19 @@ Useful toy modes:
 {"toy_mode":"crash_500"}
 {"stream":true}
 ```
+
+### 0.5. Swarm micro-reasoning kernel
+
+Use this to test system-intelligence before real Qwen workers are attached. It is not an LLM; it runs local node/edge message passing, evidence extraction, risk labeling, prompt-injection-as-data detection, and one final readout packet.
+
+```powershell
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --self-test --pretty
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --benchmark --pretty
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --topology grid_2x2 single_error --trace --pretty
+python tools/qwen_engine/swarm_micro_reasoning/swarm_mesh_kernel.py --topology cube_2x2x2 conflict --pretty
+```
+
+Growth order is fixed: `Reference-1 -> 2x2 -> 2x2x2 -> 3x3 -> 3x3x3`; do not skip ahead to larger topologies before the prior gate passes.
 
 ### 1. Internal Qwen / OpenAI-compatible API
 
@@ -89,10 +103,10 @@ This folder is a connector/engine layer, not a model mirror. Heavy files stay ou
 ```text
 Human Codex
   -> model provider adapter
-  -> primitive toy server / Qwen OpenAI-compatible endpoint / local runtime
+  -> Qwen OpenAI-compatible endpoint OR local runtime
   -> trace logger
   -> tool/result compression
   -> model re-judgement
 ```
 
-The first production target should be the OpenAI-compatible endpoint path. The toy server is for adapter and crash-lab testing; the local hidden-state probe is for research/debugging, not normal user work.
+The first production target should be the OpenAI-compatible endpoint path. The local hidden-state probe is for research/debugging, not normal user work.
