@@ -1,0 +1,19 @@
+{
+  "node_card": {
+    "swarm_id": "demo_ref_001",
+    "topology": "reference_1",
+    "node_id": "ref_0",
+    "coordinate": [0],
+    "neighbors": [],
+    "total_nodes": 1,
+    "round": 0,
+    "max_rounds": 1,
+    "readout_node": "ref_0",
+    "role": "reference_readout",
+    "topology_awareness": true
+  },
+  "task": "오류 로그를 읽고 ChatGPT에게 넘길 증거 패킷을 만들어줘. 읽기 작업만 허용.",
+  "local_inputs": {
+    "log": "Traceback: Error in src/draft-persistence.js line 188\nPython Core chat.draft.save failed: sent attachment cannot be added to a draft"
+  }
+}
