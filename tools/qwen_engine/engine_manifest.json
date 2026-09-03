@@ -4,10 +4,11 @@
   "created_for": "Human Codex / Qwen provider integration",
   "created_date": "2026-09-04",
   "includes": [
-    "primitive OpenAI-compatible toy causal LM server",
     "OpenAI-compatible Qwen endpoint probe",
     "local Transformers hidden-state/logit probe",
     "llama.cpp GGUF server wrapper",
+    "primitive OpenAI-compatible toy causal LM server",
+    "Swarm Micro-Reasoning Kernel for Reference-1, 2x2 grid, and 2x2x2 cube message-passing tests",
     "source and acquisition boundary manifest"
   ],
   "excludes": [
@@ -19,12 +20,18 @@
     "company data"
   ],
   "runtime_modes": {
-    "primitive_toy_causal_lm": {
-      "purpose": "Back-to-basics transport and behavior lab before a real model exists",
+    "primitive_toy_server": {
+      "purpose": "Transport, streaming, tool-call, failure-mode, and primitive next-character response tests before Qwen exists",
       "entrypoint": "toy_causal_lm_server.py",
       "requires_weights_in_repo": false,
-      "model_location_policy": "No model files required; uses a tiny built-in character n-gram corpus.",
-      "supported_test_modes": ["primitive", "ok", "echo", "tool_call", "crash_500", "stream"]
+      "model_location_policy": "No model required; uses built-in toy corpus or optional local corpus file."
+    },
+    "swarm_micro_reasoning": {
+      "purpose": "System-intelligence experiment: topology-aware adjacent-node message passing, source-backed evidence propagation, risk labels, and one readout packet under a 10 MB budget",
+      "entrypoint": "swarm_micro_reasoning/swarm_mesh_kernel.py",
+      "requires_weights_in_repo": false,
+      "growth_order": "Reference-1 -> 2x2 -> 2x2x2 -> 3x3 -> 3x3x3",
+      "validation_state": "local self-test PASS; real Qwen worker not attached"
     },
     "openai_compatible_api": {
       "purpose": "Production-style Human Codex provider adapter target",
@@ -59,6 +66,6 @@
     "no_auto_download_by_default": true,
     "no_secret_persistence": true,
     "company_data_external_use": "forbidden",
-    "default_starting_point": "primitive_toy_causal_lm"
+    "default_starting_point": "openai_compatible_api"
   }
 }
