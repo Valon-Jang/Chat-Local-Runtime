@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SwarmNodeCard",
+  "type": "object",
+  "required": ["swarm_id", "topology", "node_id"],
+  "properties": {
+    "swarm_id": {"type": "string"},
+    "topology": {"type": "string"},
+    "node_id": {"type": "string"},
+    "coordinate": {"type": "array", "items": {"type": "integer"}},
+    "neighbors": {"type": "array", "items": {"type": "string"}},
+    "total_nodes": {"type": "integer", "minimum": 1},
+    "round": {"type": "integer", "minimum": 0},
+    "max_rounds": {"type": "integer", "minimum": 1},
+    "readout_node": {"type": "string"},
+    "global_goal": {"type": "string"},
+    "local_rule": {"type": "string"},
+    "topology_awareness": {"type": "boolean"},
+    "role": {"type": "string"}
+  }
+}
