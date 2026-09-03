@@ -4,6 +4,7 @@
   "created_for": "Human Codex / Qwen provider integration",
   "created_date": "2026-09-04",
   "includes": [
+    "primitive OpenAI-compatible toy causal LM server",
     "OpenAI-compatible Qwen endpoint probe",
     "local Transformers hidden-state/logit probe",
     "llama.cpp GGUF server wrapper",
@@ -18,6 +19,13 @@
     "company data"
   ],
   "runtime_modes": {
+    "primitive_toy_causal_lm": {
+      "purpose": "Back-to-basics transport and behavior lab before a real model exists",
+      "entrypoint": "toy_causal_lm_server.py",
+      "requires_weights_in_repo": false,
+      "model_location_policy": "No model files required; uses a tiny built-in character n-gram corpus.",
+      "supported_test_modes": ["primitive", "ok", "echo", "tool_call", "crash_500", "stream"]
+    },
     "openai_compatible_api": {
       "purpose": "Production-style Human Codex provider adapter target",
       "entrypoint": "qwen_openai_probe.py",
@@ -51,6 +59,6 @@
     "no_auto_download_by_default": true,
     "no_secret_persistence": true,
     "company_data_external_use": "forbidden",
-    "default_starting_point": "openai_compatible_api"
+    "default_starting_point": "primitive_toy_causal_lm"
   }
 }
